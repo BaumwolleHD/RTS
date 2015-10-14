@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "GameFramework/Character.h"
+#include "AIController.h"
 #include "NPC.generated.h"
 
 UCLASS()
-class RTS_API ANPC : public ACharacter
+class RTS_API ANPC : public AAIController
 {
 	GENERATED_BODY()
 
@@ -20,9 +20,37 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
+		FString Task;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
+		bool Moving;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
+		FVector TargetLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
+		AActor* TargetActor;
+
 	
+	//Items
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items)
+		int32 ItemID;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items)
+		int32 ItemQuantity;
+
+
+	//Public Targets
+	void SetTarget(AActor* Target);
+	void SetTaskToPickup(AActor* TargetResourceBuilding);
+
+private:
+	//Checks
+	bool IsTargetReached();
+
+	//Tasks
+	void MoveToTarget();
+	int32 PickupItemsFromResorceBuilding();
+
 };

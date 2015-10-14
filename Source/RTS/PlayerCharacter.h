@@ -69,7 +69,7 @@ public:
 		TArray<AStorageBlock*> OwnedStorageBlocks;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = NPCs)
-		TArray<ACharacter*> OwnedNPCs;
+		TArray<AActor*> OwnedNPCs;
 
 
 	//Synced stuff
