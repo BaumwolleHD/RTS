@@ -251,11 +251,13 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\RTS\BuildingPreview.cpp" />
+    <ClCompile Include="..\..\Source\RTS\NPC.cpp" />
     <ClCompile Include="..\..\Source\RTS\PlayerHUD.cpp" />
     <ClCompile Include="..\..\Source\RTS\StorageBlock.cpp" />
     <ClCompile Include="..\..\Source\RTS\StorageBuilding.cpp" />
     <ClCompile Include="..\..\Source\RTS\StorageStack.cpp" />
     <ClInclude Include="..\..\Source\RTS\BuildingPreview.h" />
+    <ClInclude Include="..\..\Source\RTS\NPC.h" />
     <ClInclude Include="..\..\Source\RTS\PlayerHUD.h" />
     <ClInclude Include="..\..\Source\RTS\StorageBlock.h" />
     <ClInclude Include="..\..\Source\RTS\StorageBuilding.h" />

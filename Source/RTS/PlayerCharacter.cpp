@@ -7,6 +7,7 @@
 #include "BuildingPreview.h"
 #include "StorageBlock.h"
 #include "StorageStack.h"
+#include "NPC.h"
 #include "Engine.h"
 
 
@@ -91,10 +92,10 @@ void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, APlaye
 
 bool APlayerCharacter::CanPlaceBuilding(FVector2D Position, FVector2D Size)
 {
-	//Position = ApplyGrid(Position, SelectedBuilding.GetDefaultObject()->Size);
-	for (int32 X = -Size.X / 2 + Position.X; X <= Size.X / 2 + Position.X; X++)
+	FVector2D Offset = FVector2D(FMath::Abs(0.5f * int(!(int(Size.X) % 2))), FMath::Abs(0.5f * int(!(int(Size.Y) % 2))));
+	for (int32 X = -Size.X / 2 + Position.X - Offset.X - (0.5f - Offset.X); X <= Size.X / 2 + Position.X - Offset.X - 3 * (0.5f - Offset.X) - 2 * Offset.X; X++)
 	{
-		for (int32 Y = -Size.Y / 2 + Position.Y; Y <= Size.Y / 2 + Position.Y; Y++)
+		for (int32 Y = -Size.Y / 2 + Position.Y - Offset.Y - (0.5f - Offset.Y); Y <= Size.Y / 2 + Position.Y - Offset.Y - 3 * (0.5f - Offset.Y) - 2 * Offset.Y; Y++)
 		{
 			if (PP_BlockID.Contains(SerializeFVector2D(FVector2D(X, Y))))
 			{
@@ -141,14 +142,17 @@ void APlayerCharacter::UpdateBlockToClients_Implementation(FVector2D Position, F
 	{
 		PP_BlockID.Add(CenterSerializedPosition, ID);
 	}
-	for (int32 X = -Size.X / 2 + 1 + Position.X; X <= Size.X / 2 + Position.X - 1; X++)
+
+	FVector2D Offset = FVector2D(FMath::Abs(0.5f * int(!(int(Size.X) % 2))), FMath::Abs(0.5f * int(!(int(Size.Y) % 2))));
+	for (int32 X = -Size.X / 2 + Position.X - Offset.X - (0.5f - Offset.X); X <= Size.X / 2 + Position.X - Offset.X - 3*(0.5f - Offset.X) - 2 * Offset.X; X++)
 	{
-		for (int32 Y = -Size.Y / 2 + 1 + Position.Y; Y <= Size.Y / 2 + Position.Y - 1; Y++)
+		for (int32 Y = -Size.Y / 2 + Position.Y - Offset.Y - (0.5f - Offset.Y); Y <= Size.Y / 2 + Position.Y - Offset.Y - 3*(0.5f - Offset.Y) - 2 * Offset.Y; Y++)
 		{
 
 			if (FVector2D(X, Y) != Position)
 			{
 				SerializedPosition = SerializeFVector2D(FVector2D(X, Y));
+				//UE_LOG(LogTemp, Warning, TEXT("%s, Offset: %f|%f, Min: %f|%f, Max: %f|%f"), *SerializedPosition, Offset.X, Offset.Y, -Size.X / 2 + Position.X - Offset.X + (0.5f - Offset.X), -Size.Y / 2 + Position.Y - Offset.Y, Size.X / 2 + Position.X - Offset.X - (0.5f - Offset.X), Size.Y / 2 + Position.Y - Offset.Y -  (0.5f - Offset.Y) - 2 * Offset.Y);
 				if (PP_BlockID.Contains(SerializedPosition))
 				{
 					PP_BlockID[SerializedPosition] = CenterSerializedPosition;

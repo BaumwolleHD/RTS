@@ -64,6 +64,9 @@
     <ClInclude Include="..\..\Source\RTS\PlayerHUD.h">
       <Filter>Source\RTS</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\RTS\NPC.h">
+      <Filter>Source\RTS</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\RTS\PlayerCharacter.cpp">
@@ -85,6 +88,9 @@
       <Filter>Source\RTS</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\RTS\PlayerHUD.cpp">
+      <Filter>Source\RTS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\RTS\NPC.cpp">
       <Filter>Source\RTS</Filter>
     </ClCompile>
   </ItemGroup>

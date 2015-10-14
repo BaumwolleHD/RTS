@@ -38,6 +38,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Map)
 		FVector2D MapSize;
 
+
+	//Buildings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
 		TSubclassOf<class ABuilding> SelectedBuilding;
 
@@ -47,23 +49,35 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
 		TSubclassOf<class AStorageBlock> StorageBlockClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ItemClasses)
-		TArray<TSubclassOf<class AStorageStack>> ItemClasses;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
 		AActor* CurrentPreview;
 
+
+	//Items
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ItemClasses)
+		TArray<TSubclassOf<class AStorageStack>> ItemClasses;
+
+
+
+	//Player specific
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
 		FString Mode;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
-		bool Paused;
 
-	UPROPERTY() //Replicated)
-		TMap<FString, FString> PP_BlockID;
-
+	//Owned stuff
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Storage)
 		TArray<AStorageBlock*> OwnedStorageBlocks;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = NPCs)
+		TArray<ACharacter*> OwnedNPCs;
+
+
+	//Synced stuff
+	UPROPERTY()
+		TMap<FString, FString> PP_BlockID;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
+		bool Paused;
 
 
 	UFUNCTION(Reliable, Server, WithValidation) //Runs on Server
