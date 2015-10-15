@@ -5,6 +5,7 @@
 #include "Core.h"
 #include "Building.h"
 #include "PlayerCharacter.h"
+#include "NpcController.h"
 #include "UnrealNetwork.h"
 
 AResourceBuilding::AResourceBuilding()
@@ -56,10 +57,17 @@ void AResourceBuilding::Tick(float DeltaTime)
 			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 			if (PlayerCharacter)
 			{
-				//GrowProgressionState = 0;
-				//GrowProgression = 0;
-				PlayerCharacter->ChangeItem(ProductionQuantity, ProductionID);
-
+				TArray<APawn*> FreeNpcs = PlayerCharacter->GetFreeNpcs();
+				if (FreeNpcs.Num() > 0)
+				{
+					
+					ANpcController* const Npc = Cast<ANpcController>(FreeNpcs[0]->GetController());
+					if (Npc)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("NPC Set"));
+						Npc->SetTaskToPickup(this);
+					}
+				}
 
 			}
 		}

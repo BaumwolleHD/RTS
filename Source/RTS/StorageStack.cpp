@@ -89,7 +89,7 @@ void AStorageStack::SendStackUpdateToClients_Implementation(int32 ServerQuantity
 			CurrentQuantity += LayerItems;
 
 
-			switch (Index / ItemsPerLayer - 1)
+			switch (Index / ItemsPerLayer)
 			{
 			case 0:
 				Mesh0->SetStaticMesh(GetMeshByLayerItems(LayerItems, 0));

@@ -99,7 +99,8 @@ void AStorageBlock::BeginPlay()
 FVector AStorageBlock::GetItemPosition(int32 Index)
 {
 	FVector Location = GetActorLocation();
-	Location.X += (Index % SizeX + 1) * 1000 - 2000;
-	Location.Y += (Index / SizeY + 1) * 1000 - 2000;
+	Location.X += (Index % SizeX + 1) * 100 - 200;
+	Location.Y += (Index / SizeY + 1) * 100 - 200;
+	Location.Z += 50.f;
 	return Location;
 }

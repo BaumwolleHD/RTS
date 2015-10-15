@@ -7,7 +7,8 @@
 #include "BuildingPreview.h"
 #include "StorageBlock.h"
 #include "StorageStack.h"
-#include "NPC.h"
+#include "NpcCharacter.h"
+#include "NpcController.h"
 #include "Engine.h"
 
 
@@ -81,7 +82,7 @@ void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, APlaye
 				SpawnParameters.Owner = PlayerCharacter;
 				SpawnParameters.Instigator = Instigator;
 				UE_LOG(LogTemp, Warning, TEXT("SpawnOwner: %s"), *PlayerCharacter->GetName());
-				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(SelectedBuilding, FVector(Grid2DPosition.X * 1000.f, Grid2DPosition.Y * 1000.f, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
+				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(SelectedBuilding, FVector(Grid2DPosition.X * 100, Grid2DPosition.Y * 100, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
 
 
 				UpdateBlockToServer(Grid2DPosition, SpawnedBuilding->Size, FString::FromInt(SpawnedBuilding->ID));
@@ -110,8 +111,8 @@ bool APlayerCharacter::CanPlaceBuilding(FVector2D Position, FVector2D Size)
 
 FVector2D APlayerCharacter::ApplyGrid(FVector2D Location, FVector2D Size)
 {
-	Location.X = float(FMath::RoundToInt(Location.X / 1000) + 0.5*int(!(int(Size.X) % 2)));
-	Location.Y = float(FMath::RoundToInt(Location.Y / 1000) + 0.5*int(!(int(Size.Y) % 2)));
+	Location.X = float(FMath::RoundToInt(Location.X / 100) + 0.5*int(!(int(Size.X) % 2)));
+	Location.Y = float(FMath::RoundToInt(Location.Y / 100) + 0.5*int(!(int(Size.Y) % 2)));
 	return Location;
 }
 
@@ -192,34 +193,31 @@ void APlayerCharacter::MouseMovement(float DeltaTime)
 	APlayerController* PlayerControl = UGameplayStatics::GetPlayerController(this, 0);
 
 	PlayerControl->GetViewportSize(ViewportSizeX, ViewportSizeY);
-
-
-
 	FVector2D Factor = FVector2D(MouseLocation.X / ViewportSizeX, MouseLocation.Y / ViewportSizeY);
-	FVector CurrentLocation = this->GetActorLocation();
+	FVector CurrentLocation = GetActorLocation();
 
 
-	if (Factor.X > 1 - CameraMovementMargin&& CurrentLocation.Y <= MapSize.Y * 1000 / 2)
+	if (Factor.X > 1 - CameraMovementMargin&& CurrentLocation.Y <= MapSize.Y * 100 / 2)
 	{
-		SetActorLocation(CurrentLocation + (FVector(0.f, CameraMaxSpeed, 0.f)*FMath::Pow(Factor.X, CameraMaxSpeed - CameraMinSpeed)));
-
-	}
-	else if (Factor.X < CameraMovementMargin &&CurrentLocation.Y >= -MapSize.Y * 1000 / 2)
-	{
-		SetActorLocation(CurrentLocation + (FVector(0.f, -CameraMaxSpeed, 0.f)*FMath::Pow((1 - Factor.X), CameraMaxSpeed - CameraMinSpeed)));
+		CurrentLocation += (FVector(0.f, CameraMaxSpeed, 0.f)*FMath::Pow(CameraMaxSpeed - CameraMinSpeed, (CameraMovementMargin - (1 - Factor.X)) / CameraMovementMargin));
 
 
 	}
+	else if (Factor.X < CameraMovementMargin &&CurrentLocation.Y >= -MapSize.Y * 100 / 2)
+	{
+		CurrentLocation += (FVector(0.f, -CameraMaxSpeed, 0.f)*FMath::Pow(CameraMaxSpeed - CameraMinSpeed, (CameraMovementMargin - Factor.X) / CameraMovementMargin));
 
-	if (Factor.Y>1 - CameraMovementMargin && CurrentLocation.X >= -MapSize.X * 1000 / 2)
-	{
-		SetActorLocation(CurrentLocation + (FVector(-CameraMaxSpeed, 0.f, 0.f)*FMath::Pow(Factor.Y, CameraMaxSpeed - CameraMinSpeed)));
-	}
-	else if (Factor.Y < CameraMovementMargin && CurrentLocation.X <= MapSize.X * 1000 / 2)
-	{
-		SetActorLocation(CurrentLocation + (FVector(CameraMaxSpeed, 0.f, 0.f)*FMath::Pow((1 - Factor.Y), CameraMaxSpeed - CameraMinSpeed)));
 	}
 
+	if (Factor.Y>1 - CameraMovementMargin && CurrentLocation.X >= -MapSize.X * 100 / 2)
+	{
+		CurrentLocation += (FVector(-CameraMaxSpeed, 0.f, 0.f)*FMath::Pow(CameraMaxSpeed - CameraMinSpeed, (CameraMovementMargin - (1 - Factor.Y)) / CameraMovementMargin));
+	}
+	else if (Factor.Y < CameraMovementMargin && CurrentLocation.X <= MapSize.X * 100 / 2)
+	{
+		CurrentLocation += (FVector(CameraMaxSpeed, 0.f, 0.f)*FMath::Pow(CameraMaxSpeed - CameraMinSpeed, (CameraMovementMargin - Factor.Y) / CameraMovementMargin));
+	}
+	SetActorLocation(CurrentLocation);
 }
 
 float APlayerCharacter::ScaleToViewportFloat(float in, float factor)
@@ -237,14 +235,15 @@ void APlayerCharacter::BuildingPreview()
 		ABuildingPreview* const CurrentPreviewBuilding = Cast<ABuildingPreview>(CurrentPreview);
 		if (CurrentPreviewBuilding)
 		{
-			CurrentPreviewBuilding->SetActorLocation(FVector(GridLocation.X * 1000, GridLocation.Y * 1000, MouseHitResult.ImpactPoint.Z));
+			CurrentPreviewBuilding->SetActorLocation(FVector(GridLocation.X * 100, GridLocation.Y * 100, MouseHitResult.ImpactPoint.Z));
 
 			if (CurrentPreviewBuilding->Mesh->StaticMesh != TestBuilding->BuildMeshes[4])
 			{
 				CurrentPreviewBuilding->Mesh->SetStaticMesh(TestBuilding->BuildMeshes[4]);
 				CurrentPreviewBuilding->Mesh->SetMaterial(0, TestBuilding->BuildMeshes[4]->GetMaterial(0));
 				CurrentPreviewBuilding->Material = CurrentPreviewBuilding->Mesh->CreateAndSetMaterialInstanceDynamic(0);
-				CurrentPreview->SetActorScale3D(FVector(TestBuilding->Size.X, TestBuilding->Size.X, TestBuilding->Size.X));
+				float Scaling = TestBuilding->Size.X*0.1;
+				CurrentPreview->SetActorScale3D(FVector(Scaling, Scaling, Scaling));
 			}
 
 			if (CanPlaceBuilding(GridLocation, TestBuilding->Size))
@@ -264,11 +263,12 @@ void APlayerCharacter::BuildingPreview()
 				FActorSpawnParameters SpawnParameters;
 				SpawnParameters.Owner = this;
 				SpawnParameters.Instigator = Instigator;
-				CurrentPreview = World->SpawnActor<ABuildingPreview>(BuildingPreviewObject, FVector(GridLocation.X * 1000, GridLocation.Y * 1000, MouseHitResult.ImpactPoint.Z), FRotator(0.f, 0.f, 0.f), SpawnParameters);
+				CurrentPreview = World->SpawnActor<ABuildingPreview>(BuildingPreviewObject, FVector(GridLocation.X * 100, GridLocation.Y * 100, MouseHitResult.ImpactPoint.Z), FRotator(0.f, 0.f, 0.f), SpawnParameters);
 				ABuildingPreview* const CurrentPreviewBuilding = Cast<ABuildingPreview>(CurrentPreview);
 				CurrentPreviewBuilding->Mesh->SetStaticMesh(TestBuilding->BuildMeshes[4]);
 				CurrentPreviewBuilding->Material = CurrentPreviewBuilding->Mesh->CreateAndSetMaterialInstanceDynamic(0);
-				CurrentPreview->SetActorScale3D(FVector(TestBuilding->Size.X, TestBuilding->Size.X, TestBuilding->Size.X));
+				float Scaling = TestBuilding->Size.X*0.1;
+				CurrentPreview->SetActorScale3D(FVector(Scaling, Scaling, Scaling));
 			}
 			else
 			{
@@ -278,12 +278,30 @@ void APlayerCharacter::BuildingPreview()
 	}
 }
 
+TArray<APawn*> APlayerCharacter::GetFreeNpcs()
+{
+	TArray<APawn*> ReturnedActors;
+	for (int32 Index = 0; Index < OwnedNpcs.Num(); Index++)
+	{
+		ANpcController* const Npc = Cast<ANpcController>(OwnedNpcs[Index]->GetController());
+		if (Npc)
+		{
+			if (Npc->Task == "Free")
+			{
+				ReturnedActors.Add(OwnedNpcs[Index]);
+			}
+		}
+
+	}
+	return ReturnedActors;
+}
 
 void APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 {
+	UE_LOG(LogTemp, Warning, TEXT("%d"), OwnedStorageBlocks.Num());
 	for (int32 BlockIndex = 0; BlockIndex < OwnedStorageBlocks.Num(); BlockIndex++)
 	{
-		AStorageBlock* const Block = OwnedStorageBlocks[BlockIndex];
+		AStorageBlock* const Block = Cast<AStorageBlock>(OwnedStorageBlocks[BlockIndex]);
 		if (Block && Block->BuildProgressionState == 5)
 		{
 			for (int32 StackIndex = 0; StackIndex < Block->StorageStacks.Num(); StackIndex++)
@@ -314,7 +332,7 @@ void APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 
 	for (int32 BlockIndex = 0; BlockIndex < OwnedStorageBlocks.Num(); BlockIndex++)
 	{
-		AStorageBlock* const Block = OwnedStorageBlocks[BlockIndex];
+		AStorageBlock* const Block = Cast<AStorageBlock>(OwnedStorageBlocks[BlockIndex]);
 		if (Block && Block->BuildProgressionState == 5)
 		{
 			for (int32 StackIndex = 0; StackIndex < Block->StorageStacks.Num(); StackIndex++)
@@ -333,6 +351,7 @@ void APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 						AStorageStack* const Stack = World->SpawnActor<AStorageStack>(ItemClasses[ID], Location, FRotator(0.f, 0.f, 0.f), SpawnParameters);
 						Block->StorageStacks[StackIndex] = Stack;
 						Stack->SetActorRotation(FRotator(0, int(FMath::RandBool())*90.f, 0));
+						Stack->SetActorScale3D(FVector(0.1f,0.1f,0.1f));
 
 
 

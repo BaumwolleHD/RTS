@@ -27,7 +27,8 @@ ABuilding::ABuilding()
 void ABuilding::BeginPlay()
 {
 	Super::BeginPlay();
-	SetActorScale3D(FVector(Size.X, Size.X, Size.X));
+	float Scaling = Size.X*0.1;
+	SetActorScale3D(FVector(Scaling, Scaling, Scaling));
 	if (Role == ROLE_Authority) {
 
 		if (BuildProgressionState == 0) {

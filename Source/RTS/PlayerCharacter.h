@@ -66,10 +66,16 @@ public:
 
 	//Owned stuff
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Storage)
-		TArray<AStorageBlock*> OwnedStorageBlocks;
+		TArray<AActor*> OwnedStorageBlocks;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Storage)
+		TArray<AActor*> OwnedStorageBlock;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = NPCs)
-		TArray<AActor*> OwnedNPCs;
+		TArray<APawn*> OwnedNpcs;
+
+	//Npc Networking
+	TArray<APawn*> GetFreeNpcs();
 
 
 	//Synced stuff
