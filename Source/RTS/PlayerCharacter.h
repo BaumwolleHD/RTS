@@ -71,11 +71,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Storage)
 		TArray<AActor*> OwnedStorageBlock;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Storage)
+		AActor* OwnedStorageBuilding;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = NPCs)
 		TArray<APawn*> OwnedNpcs;
 
+	//Npc Arrays
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = NPCs)
+		TArray<APawn*> StorageNpcs;
+
 	//Npc Networking
-	TArray<APawn*> GetFreeNpcs();
+	TArray<APawn*> GetFreeNpcsByState(TArray<APawn*> NpcArray, FString Job, FString Task);
 
 
 	//Synced stuff
@@ -86,6 +93,7 @@ public:
 		bool Paused;
 
 
+	//Build Mode
 	UFUNCTION(Reliable, Server, WithValidation) //Runs on Server
 		void PlaceBuilding(FHitResult HitResult, APlayerCharacter* PlayerCharacter);
 	void PlaceBuilding_Implementation(FHitResult HitResult, APlayerCharacter* PlayerCharacter);
@@ -103,15 +111,22 @@ public:
 	void BuildingPreview();
 
 
+
+	//Resorces
 	void ChangeItem(int32 Quantity, int32 ID);
 
 
+	//Mode Changes (Hud)
+	UFUNCTION(BlueprintCallable, Category = PlayerModes)
+	void SetModeToBuildExtend();
 
 protected:
-	//void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps);
 	void MouseMovement(float DeltaTime);
 	float ScaleToViewportFloat(float in, float factor);
 	void Pause();
-	void PlaceBuildingBind();
+	void OnLeftClick();
 	FVector2D ApplyGrid(FVector2D Location, FVector2D Size);
+
+
+
 };

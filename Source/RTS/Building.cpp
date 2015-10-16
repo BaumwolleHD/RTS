@@ -86,7 +86,7 @@ bool ABuilding::CheckIfActorHasStaticMesh(AActor* Actor, UStaticMesh* StaticMesh
 
 int32 ABuilding::CalculateState(float Prog, int32 Steps)
 {
-	return FMath::Max(1, FMath::CeilToInt((Prog + 0.001f)*(Steps - 1))); //To beoptimised
+	return FMath::Max(1, FMath::CeilToInt((Prog + 0.01f)*(Steps - 1))); //To beoptimised
 }
 
 void ABuilding::SendBuildStateUpdateToClients_Implementation(float Prog)

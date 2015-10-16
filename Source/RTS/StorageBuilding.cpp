@@ -2,6 +2,7 @@
 
 #include "RTS.h"
 #include "StorageBuilding.h"
+#include "PlayerCharacter.h"
 
 
 // Sets default values
@@ -16,6 +17,12 @@ AStorageBuilding::AStorageBuilding()
 void AStorageBuilding::BeginPlay()
 {
 	Super::BeginPlay();
+
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(this->GetOwner());
+	if (PlayerCharacter && Role == ROLE_Authority)
+	{
+		PlayerCharacter->OwnedStorageBuilding = this;
+	}
 	
 }
 

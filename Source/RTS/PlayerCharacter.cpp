@@ -17,7 +17,7 @@ APlayerCharacter::APlayerCharacter()
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	Mode = "Building";
+	Mode = "Build";
 	CameraMovementMargin = 0.1f;
 	CameraMaxSpeed = 100.f;
 	CameraMinSpeed = 50.f;
@@ -41,7 +41,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UGameplayStatics::GetPlayerController(this, 0)->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, MouseHitResult);
 		MouseMovement(DeltaTime);
-		if (Mode == "Building")
+		if (Mode == "Build")
 		{
 			BuildingPreview();
 		}
@@ -56,14 +56,16 @@ void APlayerCharacter::Tick(float DeltaTime)
 void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 {
 	Super::SetupPlayerInputComponent(InputComponent);
-	InputComponent->BindAction("LeftClick", IE_Released, this, &APlayerCharacter::PlaceBuildingBind);
+	InputComponent->BindAction("LeftClick", IE_Released, this, &APlayerCharacter::OnLeftClick);
 	InputComponent->BindAction("Pause", IE_Pressed, this, &APlayerCharacter::Pause);
 
 }
-void APlayerCharacter::PlaceBuildingBind()
+void APlayerCharacter::OnLeftClick()
 {
-
-	PlaceBuilding(MouseHitResult, this);
+	if (Mode == "Build")
+	{
+		PlaceBuilding(MouseHitResult, this);
+	}
 }
 void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, APlayerCharacter* PlayerCharacter)
 {
@@ -278,17 +280,17 @@ void APlayerCharacter::BuildingPreview()
 	}
 }
 
-TArray<APawn*> APlayerCharacter::GetFreeNpcs()
+TArray<APawn*> APlayerCharacter::GetFreeNpcsByState(TArray<APawn*> NpcArray, FString Job, FString Task)
 {
 	TArray<APawn*> ReturnedActors;
-	for (int32 Index = 0; Index < OwnedNpcs.Num(); Index++)
+	for (int32 Index = 0; Index < NpcArray.Num(); Index++)
 	{
-		ANpcController* const Npc = Cast<ANpcController>(OwnedNpcs[Index]->GetController());
+		ANpcController* const Npc = Cast<ANpcController>(NpcArray[Index]->GetController());
 		if (Npc)
 		{
-			if (Npc->Task == "Free")
+			if (Task == "" && Npc->Task == Task || Job == "" && Npc->Job == Job || Npc->Task == Task && Npc->Job == Job)
 			{
-				ReturnedActors.Add(OwnedNpcs[Index]);
+				ReturnedActors.Add(NpcArray[Index]);
 			}
 		}
 
@@ -376,4 +378,9 @@ void APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 			}
 		}
 	}
+}
+
+void APlayerCharacter::SetModeToBuildExtend()
+{
+	UE_LOG(LogTemp, Warning, TEXT("SetModeToBuildExtend called"));
 }

@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
+#include "Building.h"
 #include "StorageBuilding.generated.h"
 
 UCLASS()
-class RTS_API AStorageBuilding : public AActor
+class RTS_API AStorageBuilding : public ABuilding
 {
 	GENERATED_BODY()
 	

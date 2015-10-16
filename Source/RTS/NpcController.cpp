@@ -48,7 +48,8 @@ void ANpcController::FindNextTask()
 			ItemID = Building->ProductionID;
 			ItemQuantity = Building->ProductionQuantity;
 			Building->GrowProgression = 0.f;
-			Building->GrowProgressionState = 4;
+			Building->GrowProgressionState = 0;
+			Building->SendGrowStateUpdateToClients(0.f);
 			
 			SetTaskToStorage();
 			
@@ -88,8 +89,7 @@ void ANpcController::MoveToTarget()
 		UNavigationSystem* const NavSys = GetWorld()->GetNavigationSystem();
 		float const Distance = FVector::Dist(TargetLocation, Pawn->GetActorLocation());
 
-		// We need to issue move command only if far enough in order for walk animation to play correctly
-		if (NavSys && (Distance > 120.0f))
+		if (NavSys && Distance > 120.f)
 		{
 			MoveToLocation(TargetLocation, 120.f);
 		}
@@ -112,10 +112,14 @@ void ANpcController::SetTaskToPickup(AActor* TargetResourceBuilding)
 
 void ANpcController::SetTaskToStorage()
 {
-	
+	TargetLocation = FVector(0, 0, 0);
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn()->GetOwner());
+	if (PlayerCharacter && PlayerCharacter->OwnedStorageBuilding)
+	{
+		TargetActor = PlayerCharacter->OwnedStorageBuilding;
+		TargetLocation = TargetActor->GetActorLocation();
+	}
 	Task = "MoveToStorage";
-	TargetActor = NULL;
-	TargetLocation = FVector(0,0,0);;
 	Moving = true;
 }
 

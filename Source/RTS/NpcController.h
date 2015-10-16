@@ -19,16 +19,18 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State)
 		FString Task;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State)
+		FString Job;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = State)
 		bool Moving;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = State)
 		FVector TargetLocation;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Task)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = State)
 		AActor* TargetActor;
 
 
