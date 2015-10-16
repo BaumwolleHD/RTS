@@ -4,7 +4,7 @@
 	<ItemGroup>
 		<None Include="..\..\RTS.uproject" />
 		<Filter Include="Source">
-			<UniqueIdentifier>{FF64DC29-EB27-42C5-879F-E8D74FCC48BB}</UniqueIdentifier>
+			<UniqueIdentifier>{2888F891-A524-4B16-8D74-CA46F80504FD}</UniqueIdentifier>
 		</Filter>
 		<None Include="..\..\Source\RTS.Target.cs">
 			<Filter>Source</Filter>
@@ -13,13 +13,16 @@
 			<Filter>Source</Filter>
 		</None >
 		<Filter Include="Config">
-			<UniqueIdentifier>{631ED292-3B69-4CE4-82A0-407E4F6619C8}</UniqueIdentifier>
+			<UniqueIdentifier>{15B273C8-E406-4430-B0A9-C2F0FB73CCEB}</UniqueIdentifier>
 		</Filter>
+		<None Include="..\..\Config\DefaultEngine.ini">
+			<Filter>Config</Filter>
+		</None >
 		<None Include="..\..\Config\DefaultInput.ini">
 			<Filter>Config</Filter>
 		</None >
 		<Filter Include="Source\RTS">
-			<UniqueIdentifier>{13EB5007-B5A8-46B3-8DE7-F28D9A87BD83}</UniqueIdentifier>
+			<UniqueIdentifier>{B0710464-3C10-4793-9763-65A72BC9C870}</UniqueIdentifier>
 		</Filter>
 		<ClCompile Include="..\..\Source\RTS\Building.cpp">
 			<Filter>Source\RTS</Filter>
@@ -39,10 +42,10 @@
 		<ClInclude Include="..\..\Source\RTS\DefaultGamemode.h">
 			<Filter>Source\RTS</Filter>
 		</ClInclude >
-		<ClCompile Include="..\..\Source\RTS\NPC.cpp">
+		<ClCompile Include="..\..\Source\RTS\MenuHud.cpp">
 			<Filter>Source\RTS</Filter>
 		</ClCompile >
-		<ClInclude Include="..\..\Source\RTS\NPC.h">
+		<ClInclude Include="..\..\Source\RTS\MenuHud.h">
 			<Filter>Source\RTS</Filter>
 		</ClInclude >
 		<ClCompile Include="..\..\Source\RTS\NpcCharacter.cpp">
@@ -61,12 +64,6 @@
 			<Filter>Source\RTS</Filter>
 		</ClCompile >
 		<ClInclude Include="..\..\Source\RTS\PlayerCharacter.h">
-			<Filter>Source\RTS</Filter>
-		</ClInclude >
-		<ClCompile Include="..\..\Source\RTS\PlayerHUD.cpp">
-			<Filter>Source\RTS</Filter>
-		</ClCompile >
-		<ClInclude Include="..\..\Source\RTS\PlayerHUD.h">
 			<Filter>Source\RTS</Filter>
 		</ClInclude >
 		<ClCompile Include="..\..\Source\RTS\ResourceBuilding.cpp">

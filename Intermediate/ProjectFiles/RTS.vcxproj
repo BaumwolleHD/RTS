@@ -254,6 +254,7 @@
 		<None Include="..\..\RTS.uproject" />
 		<None Include="..\..\Source\RTS.Target.cs" />
 		<None Include="..\..\Source\RTSEditor.Target.cs" />
+		<None Include="..\..\Config\DefaultEngine.ini" />
 		<None Include="..\..\Config\DefaultInput.ini" />
 		<ClCompile Include="..\..\Source\RTS\Building.cpp" />
 		<ClInclude Include="..\..\Source\RTS\Building.h" />
@@ -261,16 +262,14 @@
 		<ClInclude Include="..\..\Source\RTS\BuildingPreview.h" />
 		<ClCompile Include="..\..\Source\RTS\DefaultGamemode.cpp" />
 		<ClInclude Include="..\..\Source\RTS\DefaultGamemode.h" />
-		<ClCompile Include="..\..\Source\RTS\NPC.cpp" />
-		<ClInclude Include="..\..\Source\RTS\NPC.h" />
+		<ClCompile Include="..\..\Source\RTS\MenuHud.cpp" />
+		<ClInclude Include="..\..\Source\RTS\MenuHud.h" />
 		<ClCompile Include="..\..\Source\RTS\NpcCharacter.cpp" />
 		<ClInclude Include="..\..\Source\RTS\NpcCharacter.h" />
 		<ClCompile Include="..\..\Source\RTS\NpcController.cpp" />
 		<ClInclude Include="..\..\Source\RTS\NpcController.h" />
 		<ClCompile Include="..\..\Source\RTS\PlayerCharacter.cpp" />
 		<ClInclude Include="..\..\Source\RTS\PlayerCharacter.h" />
-		<ClCompile Include="..\..\Source\RTS\PlayerHUD.cpp" />
-		<ClInclude Include="..\..\Source\RTS\PlayerHUD.h" />
 		<ClCompile Include="..\..\Source\RTS\ResourceBuilding.cpp" />
 		<ClInclude Include="..\..\Source\RTS\ResourceBuilding.h" />
 		<None Include="..\..\Source\RTS\RTS.Build.cs" />

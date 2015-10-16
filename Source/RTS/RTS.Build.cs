@@ -6,7 +6,7 @@ public class RTS : ModuleRules
 {
 	public RTS(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule", "UMG" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "AIModule", "UMG" , "HTTP"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
