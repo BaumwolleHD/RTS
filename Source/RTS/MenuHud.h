@@ -15,16 +15,18 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = Login)
-	bool UserRegister(const FString& UserName, const FString& Password);
+	void UserRegister(const FString& UserName, const FString& Password);
 	void OnRegistrationResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	UFUNCTION(BlueprintCallable, Category = Login)
-	bool UserLogin(const FString& UserName, const FString& Password);
+	void UserLogin(const FString& UserName, const FString& Password);
 	void OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "LoginSuccessEvent"))
 		void LoginSuccessEvent(bool bSuccess, const FString& Note);
 
+	UFUNCTION(BlueprintCallable, Category = Lobby)
+		void CreateLobby(const FString& LobbyName, const FString& Password);
 
 
 	UPROPERTY()

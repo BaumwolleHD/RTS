@@ -284,7 +284,7 @@ float APlayerCharacter::ScaleToViewportFloat(float in, float factor)
 
 void APlayerCharacter::BuildingPreview()
 {
-	if (MouseHitResult.bBlockingHit && Role < ROLE_Authority)
+	if (MouseHitResult.bBlockingHit)
 	{
 		ABuilding* const TestBuilding = SelectedBuilding.GetDefaultObject();
 		FVector2D GridLocation = ApplyGrid(FVector2D(MouseHitResult.ImpactPoint.X, MouseHitResult.ImpactPoint.Y), TestBuilding->Size);
