@@ -22,11 +22,24 @@ public:
 	void UserLogin(const FString& UserName, const FString& Password);
 	void OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "LoginSuccessEvent"))
-		void LoginSuccessEvent(bool bSuccess, const FString& Note);
+	UFUNCTION(BlueprintImplementableEvent, Category = Login, meta = (Friendlyname = "LoginCompleteEvent"))
+		void LoginCompleteEvent(bool bSuccess, const FString& Note);
+
 
 	UFUNCTION(BlueprintCallable, Category = Lobby)
 		void CreateLobby(const FString& LobbyName, const FString& Password);
+	void OnCreateLobbyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "LobbycreationCompleteEvent"))
+		void LobbycreationCompleteEvent(bool bSuccess, const FString& Note);
+
+
+	UFUNCTION(BlueprintCallable, Category = Lobby)
+		void RefreshLobbylist();
+	void RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "RefreshLobbylistEvent"))
+		void RefreshLobbylistEvent(bool bSuccess, const FString& Note);
 
 
 	UPROPERTY()
