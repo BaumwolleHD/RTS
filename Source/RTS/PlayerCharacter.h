@@ -15,6 +15,7 @@ public:
 
 	FString SerializeFVector2D(FVector2D Vec2D);
 	bool CanPlaceBuilding(FVector2D Position, FVector2D Size);
+	bool CanPlaceBuildingExtension(FVector2D Position, AActor* MasterBuilding);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -85,7 +86,7 @@ public:
 		TArray<APawn*> StorageNpcs;
 
 	//Npc Networking
-	TArray<APawn*> GetFreeNpcsByState(TArray<APawn*> NpcArray, FString Job, FString Task);
+	TArray<APawn*> GetNpcsByState(TArray<APawn*> NpcArray, FString Job, FString Task);
 
 
 	//Synced stuff
@@ -130,6 +131,13 @@ protected:
 	void OnLeftClick();
 	FVector2D ApplyGrid(FVector2D Location, FVector2D Size);
 	void SelectActor();
+
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Hud)
+		TSubclassOf<class UUserWidget> HudWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Hud)
+	class UUserWidget* CurrentWidget;
 
 
 

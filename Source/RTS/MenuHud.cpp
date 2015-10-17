@@ -31,18 +31,16 @@ bool UMenuHud::UserRegister(const FString& UserName, const FString& Password)
 		Request->SetVerb("POST");
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
-		//Is registering animation start
 
 		if (!Request->ProcessRequest())
 		{
-			UE_LOG(LogTemp, Error, TEXT("Connection timed out! Error Code: Http001"));
-			//Is registering animation stop
+			LoginSuccessEvent(false, "Connection timed out!\nError Code: Http001");
 		}
 		return true;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Entered Username/Password is to short/to long: Http005"));
+		LoginSuccessEvent(false, "Entered Username/Password is to short/to long\nError Code: Http005");
 		return false;
 	}
 }
@@ -59,25 +57,23 @@ void UMenuHud::OnRegistrationResponseReceived(FHttpRequestPtr Request, FHttpResp
 			switch (Succesful)
 			{
 			case 0:
-				UE_LOG(LogTemp, Error, TEXT("An internal error occored! Error Code: Http002"));
+				LoginSuccessEvent(false, "An internal error occored!\nError Code: Http002");
 				return;
 			case 1:
-				UE_LOG(LogTemp, Error, TEXT("Username already in use! Error Code: Http003"));
+				LoginSuccessEvent(false, "Username already in use!\nError Code: Http003");
 				return;
 			case 2:
 				Token = JsonParsed->GetStringField("Token");
-				UE_LOG(LogTemp, Warning, TEXT("Registration completed! Your Token is: %s"),*Token);
+				LoginSuccessEvent(true, "Registration completed!\nYour Token is "+Token);
 				break;
 			}
 			
 		}
 		else 
 		{
-			UE_LOG(LogTemp, Error, TEXT("An internal error occored! Error Code: Http004"));
+			LoginSuccessEvent(false, "An internal error occored!\nError Code: Http004");
 		}
 	}
-	
-	//Is registering animation stop
 }
 
 bool UMenuHud::UserLogin(const FString& UserName, const FString& Password)
@@ -106,18 +102,16 @@ bool UMenuHud::UserLogin(const FString& UserName, const FString& Password)
 		Request->SetVerb("POST");
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
-		//Is registering animation start
 
 		if (!Request->ProcessRequest())
 		{
-			UE_LOG(LogTemp, Error, TEXT("Connection timed out! Error Code: Http001"));
-			//Is registering animation stop
+			LoginSuccessEvent(false, "Connection timed out!\nError Code: Http009");
 		}
 		return true;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Entered Username/Password is to short/to long: Http005"));
+		LoginSuccessEvent(false, "Entered Username/Password is to short/to long:\nError Code: Http010");
 		return false;
 	}
 }
@@ -134,21 +128,21 @@ void UMenuHud::OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr
 			switch (Succesful)
 			{
 			case 0:
-				UE_LOG(LogTemp, Error, TEXT("An internal error occored! Error Code: Http006"));
+				LoginSuccessEvent(false, "An internal error occored!\nError Code: Http006");
 				return;
 			case 1:
-				UE_LOG(LogTemp, Error, TEXT("Username already in use! Error Code: Http007"));
+				LoginSuccessEvent(false, "Wrong Username/Password!\nError Code: Http007");
 				return;
 			case 2:
 				Token = JsonParsed->GetStringField("Token");
-				UE_LOG(LogTemp, Warning, TEXT("Login completed! Your Token is: %s"), *Token);
+				LoginSuccessEvent(true, "Login completed!\nYour Token is " + Token);
 				break;
 			}
 
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("An internal error occored! Error Code: Http008"));
+			LoginSuccessEvent(false, "An internal error occored!\nError Code: Http008");
 		}
 	}
 

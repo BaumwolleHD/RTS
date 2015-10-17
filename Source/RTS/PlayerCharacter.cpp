@@ -11,6 +11,7 @@
 #include "NpcController.h"
 #include "BuildingExtension.h"
 #include "Engine.h"
+#include "Blueprint/UserWidget.h"
 
 
 // Sets default values
@@ -29,6 +30,15 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	UGameplayStatics::GetPlayerController(this, 0)->bShowMouseCursor = true;
+
+	if (HudWidgetClass != nullptr && Role < ROLE_Authority)
+	{
+		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), HudWidgetClass);
+		if (CurrentWidget)
+		{
+			CurrentWidget->AddToViewport();
+		}
+	}
 
 }
 
@@ -97,13 +107,13 @@ void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, APlaye
 
 			ABuilding* const TestBuilding = SelectedBuilding.GetDefaultObject();
 			FVector2D Grid2DPosition = ApplyGrid(FVector2D(HitResult.ImpactPoint.X, HitResult.ImpactPoint.Y), TestBuilding->Size);
-			if (CanPlaceBuilding(Grid2DPosition, TestBuilding->Size))
+			if (CanPlaceBuilding(Grid2DPosition, TestBuilding->Size) && ( Mode == "Build" || CanPlaceBuildingExtension(Grid2DPosition, PlayerCharacter->SelectedActor)))
 			{
 				FActorSpawnParameters SpawnParameters;
 				SpawnParameters.Owner = PlayerCharacter;
 				SpawnParameters.Instigator = Instigator;
 				UE_LOG(LogTemp, Warning, TEXT("SpawnOwner: %s"), *PlayerCharacter->GetName());
-				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(SelectedBuilding, FVector(Grid2DPosition.X * 100, Grid2DPosition.Y * 100, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
+				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(PlayerCharacter->SelectedBuilding, FVector(Grid2DPosition.X * 100, Grid2DPosition.Y * 100, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
 				UpdateBlockToServer(Grid2DPosition, SpawnedBuilding->Size, FString::FromInt(SpawnedBuilding->ID));
 
 
@@ -138,6 +148,22 @@ bool APlayerCharacter::CanPlaceBuilding(FVector2D Position, FVector2D Size)
 		}
 	}
 	return true;
+}
+
+bool APlayerCharacter::CanPlaceBuildingExtension(FVector2D Position, AActor* MasterBuilding)
+{
+	ABuilding* const Building = Cast<ABuilding>(MasterBuilding);
+	if (Building)
+	{
+		FVector MasterPosition = Building->GetActorLocation();
+		float Distance = FVector2D::Distance(Position * 100, FVector2D(MasterPosition.X, MasterPosition.Y));
+		if (Distance <= Building->MaxExtensionDistance*100)
+		{
+			return true;
+		}
+		return false;
+	}
+	return false;
 }
 
 FVector2D APlayerCharacter::ApplyGrid(FVector2D Location, FVector2D Size)
@@ -258,7 +284,7 @@ float APlayerCharacter::ScaleToViewportFloat(float in, float factor)
 
 void APlayerCharacter::BuildingPreview()
 {
-	if (MouseHitResult.bBlockingHit)
+	if (MouseHitResult.bBlockingHit && Role < ROLE_Authority)
 	{
 		ABuilding* const TestBuilding = SelectedBuilding.GetDefaultObject();
 		FVector2D GridLocation = ApplyGrid(FVector2D(MouseHitResult.ImpactPoint.X, MouseHitResult.ImpactPoint.Y), TestBuilding->Size);
@@ -268,8 +294,10 @@ void APlayerCharacter::BuildingPreview()
 		{
 			CurrentPreviewBuilding->SetActorLocation(FVector(GridLocation.X * 100, GridLocation.Y * 100, MouseHitResult.ImpactPoint.Z));
 
+			UE_LOG(LogTemp, Warning, TEXT("hry %s %s %s"), *CurrentPreviewBuilding->Mesh->StaticMesh->GetName(), *TestBuilding->BuildMeshes[4]->GetName(), *SelectedBuilding->GetName());
 			if (CurrentPreviewBuilding->Mesh->StaticMesh != TestBuilding->BuildMeshes[4])
 			{
+				
 				CurrentPreviewBuilding->Mesh->SetStaticMesh(TestBuilding->BuildMeshes[4]);
 				CurrentPreviewBuilding->Mesh->SetMaterial(0, TestBuilding->BuildMeshes[4]->GetMaterial(0));
 				CurrentPreviewBuilding->Material = CurrentPreviewBuilding->Mesh->CreateAndSetMaterialInstanceDynamic(0);
@@ -277,7 +305,7 @@ void APlayerCharacter::BuildingPreview()
 				CurrentPreview->SetActorScale3D(FVector(Scaling, Scaling, Scaling));
 			}
 
-			if (CanPlaceBuilding(GridLocation, TestBuilding->Size))
+			if (CanPlaceBuilding(GridLocation, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(GridLocation, SelectedActor)))
 			{
 				CurrentPreviewBuilding->Material->SetVectorParameterValue(FName("PreviewColor"), FLinearColor(0, 0.8f, 0));
 			}
@@ -286,7 +314,7 @@ void APlayerCharacter::BuildingPreview()
 				CurrentPreviewBuilding->Material->SetVectorParameterValue(FName("PreviewColor"), FLinearColor(1, 0, 0));
 			}
 		}
-		else if (CanPlaceBuilding(GridLocation, TestBuilding->Size))
+		else if (CanPlaceBuilding(GridLocation, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(GridLocation, SelectedActor)))
 		{
 			UWorld* World = UGameplayStatics::GetPlayerController(this, 0)->GetWorld();
 			if (World)
@@ -309,7 +337,7 @@ void APlayerCharacter::BuildingPreview()
 	}
 }
 
-TArray<APawn*> APlayerCharacter::GetFreeNpcsByState(TArray<APawn*> NpcArray, FString Job, FString Task)
+TArray<APawn*> APlayerCharacter::GetNpcsByState(TArray<APawn*> NpcArray, FString Job, FString Task)
 {
 	TArray<APawn*> ReturnedActors;
 	for (int32 Index = 0; Index < NpcArray.Num(); Index++)

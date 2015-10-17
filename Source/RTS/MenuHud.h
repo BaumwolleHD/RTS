@@ -22,6 +22,9 @@ public:
 	bool UserLogin(const FString& UserName, const FString& Password);
 	void OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "LoginSuccessEvent"))
+		void LoginSuccessEvent(bool bSuccess, const FString& Note);
+
 
 
 	UPROPERTY()

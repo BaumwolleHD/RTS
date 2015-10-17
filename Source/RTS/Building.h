@@ -57,6 +57,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Extension)
 		TArray<AActor*> ExtensionBuildings;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Extension)
+		int32 MaxExtensionDistance;
+
 	UFUNCTION(Reliable, NetMulticast)
 		void SendBuildStateUpdateToClients(float Prog);
 	void SendBuildStateUpdateToClients_Implementation(float Prog);

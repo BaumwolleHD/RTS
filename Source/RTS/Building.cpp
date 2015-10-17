@@ -50,7 +50,7 @@ void ABuilding::Tick(float DeltaTime)
 
 		if (BuildProgressionState != 5)
 		{
-			BuildProgression += (1 / BuildTime) * DeltaTime;
+			BuildProgression = FMath::Min( BuildProgression+(1 / BuildTime) * DeltaTime, 1.f);
 			int32 CurrentBuildProgressionState = CalculateState(BuildProgression, 5);
 			if (BuildProgressionState != CurrentBuildProgressionState) {
 				BuildProgressionState = CurrentBuildProgressionState;

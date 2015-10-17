@@ -22,10 +22,6 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Hud)
-		TSubclassOf<class UUserWidget> HudWidgetClass;
 
-	UPROPERTY()
-	class UUserWidget* CurrentWidget;
 	
 };

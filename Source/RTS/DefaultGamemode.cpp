@@ -13,14 +13,7 @@ ADefaultGamemode::ADefaultGamemode()
 void ADefaultGamemode::BeginPlay()
 {
 	Super::BeginPlay();
-	if (HudWidgetClass != nullptr)
-	{
-		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), HudWidgetClass);
-		if (CurrentWidget)
-		{
-			CurrentWidget->AddToViewport();
-		}
-	}
+
 
 
 }

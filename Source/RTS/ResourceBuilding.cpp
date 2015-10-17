@@ -44,7 +44,7 @@ void AResourceBuilding::Tick(float DeltaTime)
 	if (IsGrowing && BuildProgressionState == 5 && Role == ROLE_Authority) {
 		if (GrowProgressionState < 5)
 		{
-			GrowProgression += (1 / GrowTime) * DeltaTime;
+			GrowProgression = FMath::Min(GrowProgression+(1 / GrowTime) * DeltaTime, 1.f);
 
 			int32 CurrentGrowProgressionState = ABuilding::CalculateState(GrowProgression, 5);
 			if (GrowProgressionState != CurrentGrowProgressionState) {
@@ -59,7 +59,7 @@ void AResourceBuilding::Tick(float DeltaTime)
 			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 			if (PlayerCharacter)
 			{
-				TArray<APawn*> FreeNpcs = PlayerCharacter->GetFreeNpcsByState(PlayerCharacter->StorageNpcs, "StorageWorker", "Free");
+				TArray<APawn*> FreeNpcs = PlayerCharacter->GetNpcsByState(PlayerCharacter->StorageNpcs, "StorageWorker", "Free");
 				if (FreeNpcs.Num() > 0)
 				{
 					ANpcController* const Npc = Cast<ANpcController>(FreeNpcs[0]->GetController());
