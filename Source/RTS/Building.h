@@ -51,6 +51,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BaseSetup)
 		FVector2D Size;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Extension)
+		TSubclassOf<class ABuilding> ExtensionBuildingClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Extension)
+		TArray<AActor*> ExtensionBuildings;
+
 	UFUNCTION(Reliable, NetMulticast)
 		void SendBuildStateUpdateToClients(float Prog);
 	void SendBuildStateUpdateToClients_Implementation(float Prog);

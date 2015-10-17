@@ -20,6 +20,7 @@ ABuilding::ABuilding()
 	BuildMeshes.SetNum(5);
 	BaseMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BaseMesh"));
 	RootComponent = BaseMesh;
+	RootComponent->ComponentTags.Add(FName("SelectAble"));
 }
 
 

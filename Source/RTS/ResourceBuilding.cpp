@@ -6,6 +6,7 @@
 #include "Building.h"
 #include "PlayerCharacter.h"
 #include "NpcController.h"
+#include "ResourceBuildingExtension.h"
 #include "UnrealNetwork.h"
 
 AResourceBuilding::AResourceBuilding()
@@ -83,6 +84,27 @@ void AResourceBuilding::SendGrowStateUpdateToClients_Implementation(float Prog)
 		GrowProgression = Prog;
 		GrowProgressionState = CalculateState(GrowProgression, 5);
 	}
-	if (GrowProgressionState >= 0 && GrowProgressionState < 5 && BuildProgressionState == 5){ GrowMesh->SetStaticMesh(GrowMeshes[GrowProgressionState]); }
+	if (GrowProgressionState >= 0 && GrowProgressionState < 5 && BuildProgressionState == 5)
+	{ 
+		GrowMesh->SetStaticMesh(GrowMeshes[GrowProgressionState]);
+		for (int32 Index = 0; Index < ExtensionBuildings.Num(); Index++)
+		{
+			AResourceBuildingExtension* const Extension = Cast<AResourceBuildingExtension>(ExtensionBuildings[Index]);
+			if (Extension)
+			{
+				if (Extension->IsGrowing)
+				{
+					Extension->GrowMesh->SetStaticMesh(Extension->GrowMeshes[GrowProgressionState]);
+				}
+				else if (GrowProgressionState == 0 && Extension->BuildProgressionState == 5)
+				{
+					Extension->IsGrowing = true;
+					//ProductionQuantity += Extension->ProductionEnhancement;
+					Extension->SetMasterBuilding(this);
+				}
+			}
+
+		}
+	}
 
 }

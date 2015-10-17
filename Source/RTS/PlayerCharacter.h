@@ -40,16 +40,16 @@ public:
 
 
 	//Buildings
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BuildMode)
 		TSubclassOf<class ABuilding> SelectedBuilding;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BuildMode)
 		TSubclassOf<class ABuildingPreview> BuildingPreviewObject;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BuildMode)
 		TSubclassOf<class AStorageBlock> StorageBlockClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BuildMode)
 		AActor* CurrentPreview;
 
 
@@ -62,6 +62,9 @@ public:
 	//Player specific
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
 		FString Mode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
+		AActor* SelectedActor;
 
 
 	//Owned stuff
@@ -126,6 +129,7 @@ protected:
 	void Pause();
 	void OnLeftClick();
 	FVector2D ApplyGrid(FVector2D Location, FVector2D Size);
+	void SelectActor();
 
 
 

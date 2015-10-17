@@ -9,6 +9,7 @@
 #include "StorageStack.h"
 #include "NpcCharacter.h"
 #include "NpcController.h"
+#include "BuildingExtension.h"
 #include "Engine.h"
 
 
@@ -41,7 +42,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UGameplayStatics::GetPlayerController(this, 0)->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, MouseHitResult);
 		MouseMovement(DeltaTime);
-		if (Mode == "Build")
+		if (Mode == "Build" || Mode == "BuildExtension")
 		{
 			BuildingPreview();
 		}
@@ -62,11 +63,29 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* InputCom
 }
 void APlayerCharacter::OnLeftClick()
 {
-	if (Mode == "Build")
+	if (Mode == "Build" || Mode == "BuildExtension")
 	{
 		PlaceBuilding(MouseHitResult, this);
 	}
+	else
+	{
+		SelectActor();
+	}
 }
+
+void APlayerCharacter::SelectActor()
+{
+	if (MouseHitResult.bBlockingHit == true)
+	{
+		AActor* HitActor = MouseHitResult.GetActor();
+		if (HitActor->GetRootComponent()->ComponentHasTag(FName("SelectAble")))
+		{
+			SelectedActor = HitActor;
+			UE_LOG(LogTemp, Warning, TEXT("User %s Selected Actor: %s"), *GetName(), *SelectedActor->GetName());
+		}
+	}
+}
+
 void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, APlayerCharacter* PlayerCharacter)
 {
 	if (HitResult.bBlockingHit == true)
@@ -85,9 +104,19 @@ void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, APlaye
 				SpawnParameters.Instigator = Instigator;
 				UE_LOG(LogTemp, Warning, TEXT("SpawnOwner: %s"), *PlayerCharacter->GetName());
 				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(SelectedBuilding, FVector(Grid2DPosition.X * 100, Grid2DPosition.Y * 100, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
-
-
 				UpdateBlockToServer(Grid2DPosition, SpawnedBuilding->Size, FString::FromInt(SpawnedBuilding->ID));
+
+
+				if (PlayerCharacter->Mode == "BuildExtension")
+				{
+					ABuilding* const Building = Cast<ABuilding>(PlayerCharacter->SelectedActor);
+					ABuildingExtension* const BuildingExtension = Cast<ABuildingExtension>(SpawnedBuilding);
+					if (Building && BuildingExtension)
+					{
+						Building->ExtensionBuildings.Add(SpawnedBuilding);
+						BuildingExtension->SetMasterBuilding(Building);
+					}
+				}
 			}
 		}
 	}
@@ -383,4 +412,11 @@ void APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 void APlayerCharacter::SetModeToBuildExtend()
 {
 	UE_LOG(LogTemp, Warning, TEXT("SetModeToBuildExtend called"));
+	ABuilding* const Building = Cast<ABuilding>(SelectedActor);
+	if (Building)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SetModeToBuildExtend success"));
+		Mode = "BuildExtension";
+		SelectedBuilding = Building->ExtensionBuildingClass;
+	}
 }
