@@ -99,9 +99,9 @@ public:
 
 	//Build Mode
 	UFUNCTION(Reliable, Server, WithValidation) //Runs on Server
-		void PlaceBuilding(FHitResult HitResult, APlayerCharacter* PlayerCharacter);
-	void PlaceBuilding_Implementation(FHitResult HitResult, APlayerCharacter* PlayerCharacter);
-	bool PlaceBuilding_Validate(FHitResult HitResult, APlayerCharacter* PlayerCharacter);
+		void PlaceBuilding(FHitResult HitResult, AActor* PossesedCharacter);
+	void PlaceBuilding_Implementation(FHitResult HitResult, AActor* PossesedCharacter);
+	bool PlaceBuilding_Validate(FHitResult HitResult, AActor* PossesedCharacter);
 
 	UFUNCTION(Reliable, Server, WithValidation) // Sends block update request to server
 		void UpdateBlockToServer(FVector2D Position, FVector2D Size, const FString& ID);
@@ -124,6 +124,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = PlayerModes)
 	void SetModeToBuildExtend();
 
+	//Hud
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Hud)
+		TSubclassOf<class UUserWidget> HudWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Hud)
+	class UUserWidget* CurrentWidget;
+
 protected:
 	void MouseMovement(float DeltaTime);
 	float ScaleToViewportFloat(float in, float factor);
@@ -133,11 +140,7 @@ protected:
 	void SelectActor();
 
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Hud)
-		TSubclassOf<class UUserWidget> HudWidgetClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Hud)
-	class UUserWidget* CurrentWidget;
 
 
 

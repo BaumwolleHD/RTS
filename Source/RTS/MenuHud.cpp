@@ -1,12 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RTS.h"
+#include <string>
 #include "MenuHud.h"
 #include "Http.h"
 #include "Json.h"
 #include "SavingFile.h"
+#include "PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
-#define SALT "joxR9yjVXXR4D6Rb"
+
+void UMenuHud::GetServerData()
+{
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+	UMenuHud* Widget = Cast<UMenuHud>(PlayerCharacter->CurrentWidget);
+	Ip = Widget->Ip;
+	Salt = Widget->Salt;
+	
+
+}
 
 void UMenuHud::UserRegister(const FString& UserName, const FString& Password)
 {
@@ -17,20 +29,25 @@ void UMenuHud::UserRegister(const FString& UserName, const FString& Password)
 		if (!Http) return;
 		if (!Http->IsHttpEnabled()) return;
 
+		FString ActualPassword = FMD5::HashAnsiString(*Password);
+
 		FString JsonString;
 		//FString Salt = "joxR9yjVXXR4D6Rb";
 		TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
 
+		CurrentUserName = UserName;
+		GetServerData();
+
 		JsonWriter->WriteObjectStart();
 		JsonWriter->WriteValue("User", UserName);
-		JsonWriter->WriteValue("Pass", Password);
-		JsonWriter->WriteValue("Secret", SALT);
+		JsonWriter->WriteValue("Pass", ActualPassword);
+		JsonWriter->WriteValue("Secret", Salt);
 		JsonWriter->WriteObjectEnd();
 		JsonWriter->Close();
 
 		TSharedRef < IHttpRequest > Request = Http->CreateRequest();
 		Request->OnProcessRequestComplete().BindUObject(this, &UMenuHud::OnRegistrationResponseReceived);
-		Request->SetURL("http://10.0.0.100/api/users/register.php");
+		Request->SetURL("http://"+Ip+"/api/users/register.php");
 		Request->SetVerb("POST");
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
@@ -96,20 +113,27 @@ void UMenuHud::UserLogin(const FString& UserName, const FString& Password)
 		//FString Salt = "joxR9yjVXXR4D6Rb";
 		TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
 
+		FString ActualPassword = FMD5::HashAnsiString(*Password);
+
 		JsonWriter->WriteObjectStart();
 		JsonWriter->WriteValue("User", UserName);
-		JsonWriter->WriteValue("Pass", Password);
-		JsonWriter->WriteValue("Secret", SALT);
+		JsonWriter->WriteValue("Pass", ActualPassword);
+		const FString& Salt = "joxR9yjVXXR4D6Rb";
+		JsonWriter->WriteValue("Secret", Salt);
 		JsonWriter->WriteObjectEnd();
 		JsonWriter->Close();
 
+		CurrentUserName = UserName;
+		GetServerData();
+
+
 		TSharedRef < IHttpRequest > Request = Http->CreateRequest();
 		Request->OnProcessRequestComplete().BindUObject(this, &UMenuHud::OnLoginResponseReceived);
-		Request->SetURL("http://10.0.0.100/api/users/login.php");
+		Request->SetURL("http://"+Ip+"/api/users/login.php");
 		Request->SetVerb("POST");
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
-
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *JsonString);
 		if (!Request->ProcessRequest())
 		{
 			LoginCompleteEvent(false, "Connection timed out!\nError Code: Http009");
@@ -163,10 +187,32 @@ void UMenuHud::OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr
 	//Is registering animation stop
 }
 
+
+void UMenuHud::UserLogout(const FString& UserName, const FString& Password)
+{
+
+	USavingFile* SaveGameInstance = Cast<USavingFile>(UGameplayStatics::CreateSaveGameObject(USavingFile::StaticClass()));
+	SaveGameInstance->PlayerName = "DefaultPlayer";
+	SaveGameInstance->Token = "";
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
+
+	CurrentUserName = "";
+
+}
+
 void UMenuHud::CreateLobby(const FString& LobbyName, const FString& Password)
 {
-	if (LobbyName.Len() >= 4 && LobbyName.Len() <= 16 && Password.Len() >= 4 && Password.Len() <= 64)
+	FString ActualPassword = Password;
+	if (LobbyName.Len() >= 4 && LobbyName.Len() <= 16 && Password.Len() <= 64 && Password != "NULL")
 	{
+		if (Password == "")
+		{
+			ActualPassword = "NULL";
+
+		}
+		else {
+			ActualPassword = FMD5::HashAnsiString(*Password);
+		}
 		Http = &FHttpModule::Get();
 		if (!Http) return;
 		if (!Http->IsHttpEnabled()) return;
@@ -179,29 +225,36 @@ void UMenuHud::CreateLobby(const FString& LobbyName, const FString& Password)
 		LoadGameInstance = Cast<USavingFile>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
 		FString CurrentToken = LoadGameInstance->Token;
 
-		
+		GetServerData();
+
 		JsonWriter->WriteObjectStart();
 		JsonWriter->WriteValue("GameName", LobbyName);
-		JsonWriter->WriteValue("Password", Password);
-		JsonWriter->WriteValue("Secret", SALT);
+		JsonWriter->WriteValue("Password", ActualPassword);
+		JsonWriter->WriteValue("Secret", Salt);
 		JsonWriter->WriteValue("Token", CurrentToken);
 		JsonWriter->WriteObjectEnd();
 		JsonWriter->Close();
 
 		TSharedRef < IHttpRequest > Request = Http->CreateRequest();
 		Request->OnProcessRequestComplete().BindUObject(this, &UMenuHud::OnCreateLobbyResponseReceived);
-		Request->SetURL("http://10.0.0.100/api/serverlist/creategame.php");
+		Request->SetURL("http://"+Ip+"/api/serverlist/creategame.php");
 		Request->SetVerb("POST");
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
 
 		if (!Request->ProcessRequest())
 		{
-			LoginCompleteEvent(false, "Connection timed out!\nError Code: Http013");
+			LobbycreationCompleteEvent(false, "Connection timed out!\nError Code: Http013");
 		}
 		return;
 	}
+	else
+	{
+		LobbycreationCompleteEvent(false, "Connection timed out!\nError Code: Http013");
+	}
 }
+
+
 
 void UMenuHud::OnCreateLobbyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
@@ -223,6 +276,7 @@ void UMenuHud::OnCreateLobbyResponseReceived(FHttpRequestPtr Request, FHttpRespo
 				return;
 			case 2:
 				LobbycreationCompleteEvent(true, "Lobby successfully created!");
+				RefreshLobbylist();
 				break;
 			case 3:
 				LobbycreationCompleteEvent(false, "You are already in a Lobby. \nPlease restart your Client.\nError Code: Http014");
@@ -232,7 +286,7 @@ void UMenuHud::OnCreateLobbyResponseReceived(FHttpRequestPtr Request, FHttpRespo
 		}
 		else
 		{
-			LobbycreationCompleteEvent(false, "An internal error occored!\nError Code: Http018");
+			LobbycreationCompleteEvent(false, "An internal error occored!\nError Code: Http023");
 		}
 
 	}
@@ -254,18 +308,19 @@ void UMenuHud::RefreshLobbylist()
 	FString CurrentToken = LoadGameInstance->Token;
 
 	JsonWriter->WriteObjectStart();
-	JsonWriter->WriteValue("Secret", SALT);
+	JsonWriter->WriteValue("Secret", Salt);
 	JsonWriter->WriteValue("Token", CurrentToken);
 	JsonWriter->WriteObjectEnd();
 	JsonWriter->Close();
 
+	GetServerData();
+
 	TSharedRef < IHttpRequest > Request = Http->CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &UMenuHud::RefreshLobbylistResponseReceived);
-	Request->SetURL("http://10.0.0.100/api/serverlist/GetGameList.php");
+	Request->SetURL("http://"+Ip+"/api/serverlist/GetGameList.php");
 	Request->SetVerb("POST");
 	Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 	Request->SetContentAsString(JsonString);
-
 
 	if (!Request->ProcessRequest())
 	{
@@ -282,7 +337,7 @@ void UMenuHud::RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpRe
 		FString Content = Response->GetContentAsString();
 		TSharedRef< TJsonReader<TCHAR> > Reader = TJsonReaderFactory<TCHAR>::Create(Content);
 		TSharedPtr<FJsonObject> JsonParsed;
-		UE_LOG(LogTemp, Warning, TEXT("Toke = %s"), *Content);
+		UE_LOG(LogTemp, Warning, TEXT("ListContent: %s"), *Content);
 		if (FJsonSerializer::Deserialize(Reader, JsonParsed))
 		{
 			
@@ -296,24 +351,52 @@ void UMenuHud::RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpRe
 				RefreshLobbylistEvent(false, "No available Lobbies!\nError Code: Http017");
 				break;
 			case 2:
-				RefreshLobbylistEvent(true, "Lobby list refreshed: " + Content);
-				//TSharedPtr<FJsonObject> Servers = JsonParsed->GetObjectField("Servers");
-				TArray<TSharedPtr<FJsonValue>>*& Serverlist;
-				JsonParsed->TryGetArrayField("Servers", Serverlist);
-				
-				for (int32 ServerIndex = 0; ServerIndex < Servers.Num(); ServerIndex++)
+				RefreshLobbylistEvent(true, "Lobby list refreshed");
+				FString ServerField = JsonParsed->GetStringField("Servers");
+				FString CurrentServer;
+				FString LeftServers = ServerField;
+
+				FString CurrentValue;
+				FString LeftValues = CurrentServer;
+
+				FString Name;
+				FString Password;
+				FString Map;
+
+				ClearLobbylistEvent();
+
+				while (LeftServers.Split(";", &CurrentServer, &LeftServers))
 				{
-					FString Name = Servers[ServerIndex]->AsString();
-					UE_LOG(LogTemp, Warning, TEXT("%s"),*Name);
+					if (CurrentServer == "" || CurrentServer == ","){ break; }
 
+					CurrentValue = "";
+					LeftValues = CurrentServer;
+					Name = "";
+					Password = "";
+					Map = "";
 
-					/*FJsonObject* Server = Servers[ServerIndex]->AsObject().Get();
-					FString Map = JsonParsed->GetStringField("Map");
-					FString Password = JsonParsed->GetStringField("Password");
-					FString Name = Servers[ServerIndex]->AsString();*/
-					//UE_LOG(LogTemp, Warning, TEXT("%S %s %s"), *Map, *Password, *Name);
+					int32 CurrentIndex = 0;
+					while (LeftValues.Split(",", &CurrentValue, &LeftValues))
+					{
+						if (CurrentValue == "" ||  CurrentValue == ",")
+						{ 
+							break; 
+						}
+						switch (CurrentIndex)
+						{
+						case 0:
+							Name = CurrentValue;
+						case 1:
+							Password = CurrentValue;
+						case 2:
+							Map = CurrentValue;
+						}
+						CurrentIndex += 1;
+					}
+					AddLobbytoLobbylist(Name, Password, Map);
 				}
-
+				
+				//ClearLobbylistEvent();
 				return;
 			}
 		}
@@ -324,3 +407,116 @@ void UMenuHud::RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpRe
 	}
 
 }
+
+
+void UMenuHud::JoinLobby(const FString& LobbyName, const FString& Password)
+{
+
+	//UE_LOG(LogTemp, Warning, TEXT("called"));
+	FString ActualPassword = Password;
+	if (Password.Len() <= 64)
+	{
+		if (Password == "" || Password == "NULL")
+		{
+			ActualPassword = "NULL";
+
+		}
+		else {
+			ActualPassword = FMD5::HashAnsiString(*Password);
+		}
+		Http = &FHttpModule::Get();
+		if (!Http) return;
+		if (!Http->IsHttpEnabled()) return;
+
+		FString JsonString;
+		TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
+
+
+		USavingFile* LoadGameInstance = Cast<USavingFile>(UGameplayStatics::CreateSaveGameObject(USavingFile::StaticClass()));
+		LoadGameInstance = Cast<USavingFile>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
+		FString CurrentToken = LoadGameInstance->Token;
+
+
+		JsonWriter->WriteObjectStart();
+		JsonWriter->WriteValue("GameName", LobbyName);
+		JsonWriter->WriteValue("GamePassword", ActualPassword);
+		JsonWriter->WriteValue("Secret", Salt);
+		JsonWriter->WriteValue("Token", CurrentToken);
+		JsonWriter->WriteObjectEnd();
+		JsonWriter->Close();
+
+		GetServerData();
+
+		TSharedRef < IHttpRequest > Request = Http->CreateRequest();
+		Request->OnProcessRequestComplete().BindUObject(this, &UMenuHud::JoinLobbyResponseReceived);
+		Request->SetURL("http://" + Ip + "/api/users/JoinServer.php");
+		Request->SetVerb("POST");
+		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
+		Request->SetContentAsString(JsonString);
+		UE_LOG(LogTemp, Warning, TEXT("name: %s  Pw: %s"), *LobbyName, *ActualPassword);
+		if (!Request->ProcessRequest())
+		{
+			JoinLobbyEvent(false, "Connection timed out!\nError Code: Http022", LobbyName, "");
+		}
+		return;
+	}
+	else
+	{
+		JoinLobbyEvent(false, "Connection timed out!\nError Code: Http023", LobbyName, "");
+	}
+}
+
+
+void UMenuHud::JoinLobbyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	if (bWasSuccessful)
+	{
+
+		FString Content = Response->GetContentAsString();
+		TSharedRef< TJsonReader<TCHAR> > Reader = TJsonReaderFactory<TCHAR>::Create(Content);
+		TSharedPtr<FJsonObject> JsonParsed;
+		UE_LOG(LogTemp, Warning, TEXT("Content: %s"), *Content);
+		if (FJsonSerializer::Deserialize(Reader, JsonParsed))
+		{
+
+			int32 Succesful = JsonParsed->GetIntegerField("bSuccesful");
+			switch (Succesful)
+			{
+			case 0:
+				JoinLobbyEvent(false, "An internal error occored!\nError Code: Http025", "", "");
+				break;
+			case 1:
+				JoinLobbyEvent(false, "Wrong password!\nError Code: Http026", "", "");
+				break;
+			case 2:
+				FString Ip = JsonParsed->GetStringField("Ip");
+				FString Port = JsonParsed->GetStringField("Port");
+				FString Name = JsonParsed->GetStringField("Name");
+				FString Map = JsonParsed->GetStringField("Map");
+
+
+				FSocket* LobbySocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("default"), false);
+				int32 PortIndex = FCString::Atoi(*Port);
+				FIPv4Address Address;
+				FIPv4Address::Parse(Ip, Address);
+				TSharedRef<FInternetAddr> addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+				addr->SetIp(Address.GetValue());
+				addr->SetPort(PortIndex);
+				bool Connected = LobbySocket->Connect(*addr);
+
+
+				JoinLobbyEvent(true, "Succesfully joined Lobby!", Name, Map);
+
+
+				return;
+			}
+		}
+		else
+		{
+			JoinLobbyEvent(false, "An internal error occored!\nError Code: Http027", "", "");
+		}
+	}
+
+
+}
+

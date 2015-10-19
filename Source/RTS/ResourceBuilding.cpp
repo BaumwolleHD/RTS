@@ -56,7 +56,9 @@ void AResourceBuilding::Tick(float DeltaTime)
 		}
 		else if (GrowProgressionState != 6)
 		{
+			
 			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+
 			if (PlayerCharacter)
 			{
 				TArray<APawn*> FreeNpcs = PlayerCharacter->GetNpcsByState(PlayerCharacter->StorageNpcs, "StorageWorker", "Free");

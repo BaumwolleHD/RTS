@@ -73,9 +73,10 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* InputCom
 }
 void APlayerCharacter::OnLeftClick()
 {
-	if (Mode == "Build" || Mode == "BuildExtension")
+	if (Mode == "Build" || Mode == "BuildExtension" && Role < ROLE_Authority)
 	{
 		PlaceBuilding(MouseHitResult, this);
+		UE_LOG(LogTemp, Warning, TEXT("hahaha %s"), *this -> GetName());
 	}
 	else
 	{
@@ -96,30 +97,31 @@ void APlayerCharacter::SelectActor()
 	}
 }
 
-void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, APlayerCharacter* PlayerCharacter)
+void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, AActor* PossesedCharacter)
 {
 	if (HitResult.bBlockingHit == true)
 	{
 		UWorld* World = GetWorld();
-
+		APlayerCharacter* PossesedPlayerCharacter = Cast<APlayerCharacter>(PossesedCharacter);
 		if (World)
 		{
 
 			ABuilding* const TestBuilding = SelectedBuilding.GetDefaultObject();
 			FVector2D Grid2DPosition = ApplyGrid(FVector2D(HitResult.ImpactPoint.X, HitResult.ImpactPoint.Y), TestBuilding->Size);
-			if (CanPlaceBuilding(Grid2DPosition, TestBuilding->Size) && ( Mode == "Build" || CanPlaceBuildingExtension(Grid2DPosition, PlayerCharacter->SelectedActor)))
+			if (CanPlaceBuilding(Grid2DPosition, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(Grid2DPosition, PossesedPlayerCharacter->SelectedActor)))
 			{
 				FActorSpawnParameters SpawnParameters;
-				SpawnParameters.Owner = PlayerCharacter;
+				SpawnParameters.Owner = PossesedCharacter;
 				SpawnParameters.Instigator = Instigator;
-				UE_LOG(LogTemp, Warning, TEXT("SpawnOwner: %s"), *PlayerCharacter->GetName());
-				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(PlayerCharacter->SelectedBuilding, FVector(Grid2DPosition.X * 100, Grid2DPosition.Y * 100, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
+				UE_LOG(LogTemp, Warning, TEXT("%s from %s by %s"), *PossesedPlayerCharacter->SelectedBuilding->GetName(), *PossesedPlayerCharacter->GetName(), *GetName());
+			//	UE_LOG(LogTemp, Warning, TEXT("SpawnOwner: %s"), *PlayerCharacter->GetName());
+				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(PossesedPlayerCharacter->SelectedBuilding, FVector(Grid2DPosition.X * 100, Grid2DPosition.Y * 100, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
 				UpdateBlockToServer(Grid2DPosition, SpawnedBuilding->Size, FString::FromInt(SpawnedBuilding->ID));
 
 
-				if (PlayerCharacter->Mode == "BuildExtension")
+				if (PossesedPlayerCharacter->Mode == "BuildExtension")
 				{
-					ABuilding* const Building = Cast<ABuilding>(PlayerCharacter->SelectedActor);
+					ABuilding* const Building = Cast<ABuilding>(PossesedPlayerCharacter->SelectedActor);
 					ABuildingExtension* const BuildingExtension = Cast<ABuildingExtension>(SpawnedBuilding);
 					if (Building && BuildingExtension)
 					{
@@ -173,7 +175,7 @@ FVector2D APlayerCharacter::ApplyGrid(FVector2D Location, FVector2D Size)
 	return Location;
 }
 
-bool APlayerCharacter::PlaceBuilding_Validate(FHitResult HitResult, APlayerCharacter* PlayerCharacter) { return true; } //Anti-Cheat
+bool APlayerCharacter::PlaceBuilding_Validate(FHitResult HitResult, AActor* PossesedCharacter) { return true; } //Anti-Cheat
 
 //bool APlayerCharacter::UpdateBlockToClients_Validate(const FString& Position, int32 ID) { return true; } //Anti-Cheat
 
@@ -293,8 +295,7 @@ void APlayerCharacter::BuildingPreview()
 		if (CurrentPreviewBuilding)
 		{
 			CurrentPreviewBuilding->SetActorLocation(FVector(GridLocation.X * 100, GridLocation.Y * 100, MouseHitResult.ImpactPoint.Z));
-
-			UE_LOG(LogTemp, Warning, TEXT("hry %s %s %s"), *CurrentPreviewBuilding->Mesh->StaticMesh->GetName(), *TestBuilding->BuildMeshes[4]->GetName(), *SelectedBuilding->GetName());
+		
 			if (CurrentPreviewBuilding->Mesh->StaticMesh != TestBuilding->BuildMeshes[4])
 			{
 				
@@ -441,7 +442,7 @@ void APlayerCharacter::SetModeToBuildExtend()
 {
 	UE_LOG(LogTemp, Warning, TEXT("SetModeToBuildExtend called"));
 	ABuilding* const Building = Cast<ABuilding>(SelectedActor);
-	if (Building)
+	if (Building && Role < ROLE_Authority)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SetModeToBuildExtend success"));
 		Mode = "BuildExtension";
