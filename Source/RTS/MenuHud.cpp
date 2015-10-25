@@ -12,12 +12,158 @@
 
 void UMenuHud::GetServerData()
 {
-	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
-	UMenuHud* Widget = Cast<UMenuHud>(PlayerCharacter->CurrentWidget);
+	//APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+	UMenuHud* Widget = Cast<UMenuHud>(Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0))->CurrentWidget);
 	Ip = Widget->Ip;
 	Salt = Widget->Salt;
-	
+}
 
+void UMenuHud::GetUserData()
+{
+	UMenuHud* Widget = Cast<UMenuHud>(Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0))->CurrentWidget);
+	CurrentUserName = Widget->CurrentUserName;
+}
+
+void UMenuHud::SetUserData()
+{
+	UMenuHud* Widget = Cast<UMenuHud>(Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0))->CurrentWidget);
+	Widget->CurrentUserName = CurrentUserName;
+}
+
+FString UMenuHud::StringFromBinaryArray(const TArray<uint8>& BinaryArray)
+{
+	//Create a string from a byte array!
+	const std::string cstr(reinterpret_cast<const char*>(BinaryArray.GetData()), BinaryArray.Num());
+
+	//FString can take in the c_str() of a std::string
+	return FString(cstr.c_str());
+}
+
+void UMenuHud::Construct()
+{
+	Super::Construct();
+
+	GetServerData();
+
+}
+
+void UMenuHud::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
+{
+	Super::NativeTick(MyGeometry, DeltaTime);
+	if (ListenToServer && CurrentSocket != NULL)
+	{
+
+		//Heartbeat
+		HeartbeatTimer -= DeltaTime;
+		if (HeartbeatTimer <= 0)
+		{
+			FString Serialized = TEXT("Heartbeat|");
+			TCHAR *SerializedChar = Serialized.GetCharArray().GetData();
+			int32 Size = FCString::Strlen(SerializedChar);
+			int32 Sent = 0;
+			bool SendSuccessful = CurrentSocket->Send((uint8*)TCHAR_TO_UTF8(SerializedChar), Size, Sent);
+			if (SendSuccessful)
+			{
+				if (!IsConnected) 
+				{
+					NoteEvent("Success", "Reconnected to server");
+				}
+				IsConnected = true;
+				GetUserData();
+				UE_LOG(LogTemp, Warning, TEXT("Heartbeat"))
+			}
+			else if (IsConnected)
+			{
+				IsConnected = false;
+				NoteEvent("Fail", "Lost connection to server\nError Code: Tcp001");
+			}
+			else
+			{
+				NoteEvent("Blink", "Trying to reconnect...");
+			}
+			HeartbeatTimer = 5;
+
+		}
+		
+		//Listener
+		uint32 PendingDataSize;
+		while (CurrentSocket != NULL && CurrentSocket->HasPendingData(PendingDataSize))
+		{
+			TArray<uint8> Data;
+			Data.SetNumUninitialized(FMath::Min(PendingDataSize, 65507u));
+			int32 BytesRead;
+			bool ReceivingSuccesful = CurrentSocket->Recv(Data.GetData(), 1024, BytesRead, ESocketReceiveFlags::None);
+
+			if (ReceivingSuccesful && BytesRead > 0)
+			{
+				FString ReceivedString = StringFromBinaryArray(Data);
+				if (ReceivedString != "0")
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Received String: %s"), *ReceivedString);
+					if (ReceivedString.Left(4) == "Join")
+					{
+						FString LeftString = ReceivedString.RightChop(5) + ";";
+						FString CurrentData;
+						int32 CurrentIndex = 0;
+						int32 Success = -1;
+						FString PlayerList;
+						FString LobbyName;
+						FString LobbyMap;
+						while (LeftString.Split(";", &CurrentData, &LeftString))
+						{
+							if (CurrentIndex > 10)
+							{
+								break;
+							}
+							
+							switch (CurrentIndex)
+							{
+							case 0:
+								Success = FCString::Atoi(*CurrentData);
+								break;
+							case 1:
+								PlayerList = CurrentData;
+								break;
+							case 2:
+								LobbyName = CurrentData;
+								break;
+							case 3:
+								LobbyMap = CurrentData;
+								break;
+							}
+							CurrentIndex += 1;
+						}
+
+						//UE_LOG(LogTemp, Warning, TEXT("Joined: %d, %s, %s, %s"), Success, *PlayerList, *LobbyName, *LobbyMap);
+						switch (Success)
+						{
+						case -1:
+							JoinLobbyEvent(false, "Unable to read incomming LobbyData\nError Code: Tcp004","","");
+							CurrentSocket = NULL;
+							break;
+						case 0:
+							JoinLobbyEvent(false, "Lobby does not exist\nError Code: Tcp005", "", "");
+							CurrentSocket = NULL;
+							break;
+						case 1:
+							JoinLobbyEvent(false, "Wrong password\nError Code: Tcp006", "", "");
+							CurrentSocket = NULL;
+							break;
+						case 2:
+							NoteEvent("Success", "Player joined your lobby");
+							CurrentSocket = NULL;
+							break;
+						case 3:
+							JoinLobbyEvent(true, "Successfully joined lobby", LobbyName, LobbyMap);
+							break;
+
+
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void UMenuHud::UserRegister(const FString& UserName, const FString& Password)
@@ -36,7 +182,6 @@ void UMenuHud::UserRegister(const FString& UserName, const FString& Password)
 		TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
 
 		CurrentUserName = UserName;
-		GetServerData();
 
 		JsonWriter->WriteObjectStart();
 		JsonWriter->WriteValue("User", UserName);
@@ -52,9 +197,9 @@ void UMenuHud::UserRegister(const FString& UserName, const FString& Password)
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
 
-		if (!Request->ProcessRequest())
+		if (Request->ProcessRequest())
 		{
-			LoginCompleteEvent(false, "Connection timed out!\nError Code: Http001");
+			LoginCompleteEvent(false, "Connection timed out\nError Code: Http001");
 		}
 		return;
 	}
@@ -77,25 +222,29 @@ void UMenuHud::OnRegistrationResponseReceived(FHttpRequestPtr Request, FHttpResp
 			switch (Succesful)
 			{
 			case 0:
-				LoginCompleteEvent(false, "An internal error occored!\nError Code: Http002");
+				LoginCompleteEvent(false, "An internal error occored\nError Code: Http002");
 				return;
 			case 1:
-				LoginCompleteEvent(false, "Username already in use!\nError Code: Http003");
+				LoginCompleteEvent(false, "Username already in use\nError Code: Http003");
 				return;
 			case 2:
 				Token = JsonParsed->GetStringField("Token");
-				LoginCompleteEvent(true, "Registration completed!\nYour Token is "+Token);
+				LoginCompleteEvent(true, "Registration completed\nYour Token is "+Token);
+
+				SetUserData();
+
 				USavingFile* SaveGameInstance = Cast<USavingFile>(UGameplayStatics::CreateSaveGameObject(USavingFile::StaticClass()));
-				SaveGameInstance->PlayerName = "DefaultPlayer";
+				SaveGameInstance->PlayerName = CurrentUserName;
 				SaveGameInstance->Token = Token;
 				UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
+
 				break;
 			}
 			
 		}
 		else 
 		{
-			LoginCompleteEvent(false, "An internal error occored!\nError Code: Http004");
+			LoginCompleteEvent(false, "Failed to deserialize returns\nError Code: Http004");
 		}
 	}
 }
@@ -124,7 +273,6 @@ void UMenuHud::UserLogin(const FString& UserName, const FString& Password)
 		JsonWriter->Close();
 
 		CurrentUserName = UserName;
-		GetServerData();
 
 
 		TSharedRef < IHttpRequest > Request = Http->CreateRequest();
@@ -133,10 +281,9 @@ void UMenuHud::UserLogin(const FString& UserName, const FString& Password)
 		Request->SetVerb("POST");
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *JsonString);
 		if (!Request->ProcessRequest())
 		{
-			LoginCompleteEvent(false, "Connection timed out!\nError Code: Http009");
+			LoginCompleteEvent(false, "Connection timed out\nError Code: Http009");
 		}
 		return;
 	}
@@ -159,18 +306,19 @@ void UMenuHud::OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr
 			switch (Succesful)
 			{
 			case 0:
-				LoginCompleteEvent(false, "An internal error occored!\nError Code: Http006");
+				LoginCompleteEvent(false, "An internal error occored\nError Code: Http006");
 				return;
 			case 1:
-				LoginCompleteEvent(false, "Invalid Username/Password!\nError Code: Http007");
+				LoginCompleteEvent(false, "Invalid Username/Password\nError Code: Http007");
 				return;
 			case 2:
 				Token = JsonParsed->GetStringField("Token");
-				LoginCompleteEvent(true, "Login completed!\nYour Token is " + Token);
+				LoginCompleteEvent(true, "Login completed\nYour Token is " + Token);
 
+				SetUserData();
 
 				USavingFile* SaveGameInstance = Cast<USavingFile>(UGameplayStatics::CreateSaveGameObject(USavingFile::StaticClass()));
-				SaveGameInstance->PlayerName = "DefaultPlayer";
+				SaveGameInstance->PlayerName = CurrentUserName;
 				SaveGameInstance->Token = Token;
 				UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
 
@@ -180,7 +328,7 @@ void UMenuHud::OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr
 		}
 		else
 		{
-			LoginCompleteEvent(false, "An internal error occored!\nError Code: Http008");
+			LoginCompleteEvent(false, "Failed to deserialize returns\nError Code: Http008");
 		}
 	}
 
@@ -225,7 +373,6 @@ void UMenuHud::CreateLobby(const FString& LobbyName, const FString& Password)
 		LoadGameInstance = Cast<USavingFile>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
 		FString CurrentToken = LoadGameInstance->Token;
 
-		GetServerData();
 
 		JsonWriter->WriteObjectStart();
 		JsonWriter->WriteValue("GameName", LobbyName);
@@ -244,13 +391,13 @@ void UMenuHud::CreateLobby(const FString& LobbyName, const FString& Password)
 
 		if (!Request->ProcessRequest())
 		{
-			LobbycreationCompleteEvent(false, "Connection timed out!\nError Code: Http013");
+			LobbycreationCompleteEvent(false, "Connection timed out\nError Code: Http013");
 		}
 		return;
 	}
 	else
 	{
-		LobbycreationCompleteEvent(false, "Connection timed out!\nError Code: Http013");
+		LobbycreationCompleteEvent(false, "Connection timed out\nError Code: Http013");
 	}
 }
 
@@ -269,13 +416,13 @@ void UMenuHud::OnCreateLobbyResponseReceived(FHttpRequestPtr Request, FHttpRespo
 			switch (Succesful)
 			{
 			case 0:
-				LobbycreationCompleteEvent(false, "An internal error occored!\nError Code: Http011");
+				LobbycreationCompleteEvent(false, "An internal error occored\nError Code: Http011");
 				return;
 			case 1:
-				LobbycreationCompleteEvent(false, "Lobby name already in use!\nError Code: Http012");
+				LobbycreationCompleteEvent(false, "Lobby name already in use\nError Code: Http012");
 				return;
 			case 2:
-				LobbycreationCompleteEvent(true, "Lobby successfully created!");
+				LobbycreationCompleteEvent(true, "Lobby successfully created");
 				RefreshLobbylist();
 				break;
 			case 3:
@@ -286,7 +433,7 @@ void UMenuHud::OnCreateLobbyResponseReceived(FHttpRequestPtr Request, FHttpRespo
 		}
 		else
 		{
-			LobbycreationCompleteEvent(false, "An internal error occored!\nError Code: Http023");
+			LobbycreationCompleteEvent(false, "Failed to deserialize returns\nError Code: Http023");
 		}
 
 	}
@@ -313,7 +460,6 @@ void UMenuHud::RefreshLobbylist()
 	JsonWriter->WriteObjectEnd();
 	JsonWriter->Close();
 
-	GetServerData();
 
 	TSharedRef < IHttpRequest > Request = Http->CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &UMenuHud::RefreshLobbylistResponseReceived);
@@ -324,7 +470,7 @@ void UMenuHud::RefreshLobbylist()
 
 	if (!Request->ProcessRequest())
 	{
-		RefreshLobbylistEvent(false, "Connection timed out!\nError Code: Http021");
+		RefreshLobbylistEvent(false, "Connection timed out\nError Code: Http021");
 	}
 	return;
 }
@@ -337,7 +483,6 @@ void UMenuHud::RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpRe
 		FString Content = Response->GetContentAsString();
 		TSharedRef< TJsonReader<TCHAR> > Reader = TJsonReaderFactory<TCHAR>::Create(Content);
 		TSharedPtr<FJsonObject> JsonParsed;
-		UE_LOG(LogTemp, Warning, TEXT("ListContent: %s"), *Content);
 		if (FJsonSerializer::Deserialize(Reader, JsonParsed))
 		{
 			
@@ -345,10 +490,10 @@ void UMenuHud::RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpRe
 			switch (Succesful)
 			{
 			case 0:
-				RefreshLobbylistEvent(false, "An internal error occored!\nError Code: Http016");
+				RefreshLobbylistEvent(false, "An internal error occored\nError Code: Http016");
 				return;
 			case 1:
-				RefreshLobbylistEvent(false, "No available Lobbies!\nError Code: Http017");
+				RefreshLobbylistEvent(true, "No available Lobbies");
 				break;
 			case 2:
 				RefreshLobbylistEvent(true, "Lobby list refreshed");
@@ -402,7 +547,7 @@ void UMenuHud::RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpRe
 		}
 		else
 		{
-			RefreshLobbylistEvent(false, "An internal error occored!\nError Code: Http020");
+			RefreshLobbylistEvent(false, "Failed to deserialize returns\nError Code: Http020");
 		}
 	}
 
@@ -412,7 +557,6 @@ void UMenuHud::RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpRe
 void UMenuHud::JoinLobby(const FString& LobbyName, const FString& Password)
 {
 
-	//UE_LOG(LogTemp, Warning, TEXT("called"));
 	FString ActualPassword = Password;
 	if (Password.Len() <= 64)
 	{
@@ -445,7 +589,6 @@ void UMenuHud::JoinLobby(const FString& LobbyName, const FString& Password)
 		JsonWriter->WriteObjectEnd();
 		JsonWriter->Close();
 
-		GetServerData();
 
 		TSharedRef < IHttpRequest > Request = Http->CreateRequest();
 		Request->OnProcessRequestComplete().BindUObject(this, &UMenuHud::JoinLobbyResponseReceived);
@@ -453,16 +596,15 @@ void UMenuHud::JoinLobby(const FString& LobbyName, const FString& Password)
 		Request->SetVerb("POST");
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
-		UE_LOG(LogTemp, Warning, TEXT("name: %s  Pw: %s"), *LobbyName, *ActualPassword);
 		if (!Request->ProcessRequest())
 		{
-			JoinLobbyEvent(false, "Connection timed out!\nError Code: Http022", LobbyName, "");
+			JoinLobbyEvent(false, "Connection timed out\nError Code: Http022", LobbyName, "");
 		}
 		return;
 	}
 	else
 	{
-		JoinLobbyEvent(false, "Connection timed out!\nError Code: Http023", LobbyName, "");
+		JoinLobbyEvent(false, "Connection timed out\nError Code: Http023", LobbyName, "");
 	}
 }
 
@@ -475,7 +617,7 @@ void UMenuHud::JoinLobbyResponseReceived(FHttpRequestPtr Request, FHttpResponseP
 		FString Content = Response->GetContentAsString();
 		TSharedRef< TJsonReader<TCHAR> > Reader = TJsonReaderFactory<TCHAR>::Create(Content);
 		TSharedPtr<FJsonObject> JsonParsed;
-		UE_LOG(LogTemp, Warning, TEXT("Content: %s"), *Content);
+		UE_LOG(LogTemp, Warning, TEXT("return: %s"), *Content);
 		if (FJsonSerializer::Deserialize(Reader, JsonParsed))
 		{
 
@@ -483,40 +625,71 @@ void UMenuHud::JoinLobbyResponseReceived(FHttpRequestPtr Request, FHttpResponseP
 			switch (Succesful)
 			{
 			case 0:
-				JoinLobbyEvent(false, "An internal error occored!\nError Code: Http025", "", "");
+				JoinLobbyEvent(false, "An internal error occored\nError Code: Http025", "", "");
 				break;
 			case 1:
-				JoinLobbyEvent(false, "Wrong password!\nError Code: Http026", "", "");
+				JoinLobbyEvent(false, "Wrong password\nError Code: Http026", "", "");
 				break;
 			case 2:
 				FString Ip = JsonParsed->GetStringField("Ip");
 				FString Port = JsonParsed->GetStringField("Port");
 				FString Name = JsonParsed->GetStringField("Name");
-				FString Map = JsonParsed->GetStringField("Map");
+				
+				FString Password = ";"+JsonParsed->GetStringField("Password");
 
+				if (Password == ";NULL")
+				{
+					Password = "";
+				}
 
-				FSocket* LobbySocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("default"), false);
 				int32 PortIndex = FCString::Atoi(*Port);
-				FIPv4Address Address;
-				FIPv4Address::Parse(Ip, Address);
-				TSharedRef<FInternetAddr> addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-				addr->SetIp(Address.GetValue());
-				addr->SetPort(PortIndex);
-				bool Connected = LobbySocket->Connect(*addr);
 
+				FSocket* LobbySocket = CreateSocket(Ip, PortIndex);
 
-				JoinLobbyEvent(true, "Succesfully joined Lobby!", Name, Map);
+				GetUserData();
 
+				FString Serialized = TEXT("Join;" + Name + ";" + CurrentUserName + Password + "|");
+
+				UE_LOG(LogTemp, Warning, TEXT("Sending Data: %s"), *Serialized);
+
+				TCHAR *SerializedChar = Serialized.GetCharArray().GetData();
+				int32 Size = FCString::Strlen(SerializedChar);
+				int32 Sent = 0;
+
+				bool SendSuccessful = LobbySocket->Send((uint8*)TCHAR_TO_UTF8(SerializedChar), Size, Sent);
+
+				if (!SendSuccessful)
+				{
+					JoinLobbyEvent(false, "Could not reach Server\nError Code: Tcp002", "", "");
+					return;
+				}
+
+				CurrentSocket = LobbySocket;
+				IsConnected = true;
 
 				return;
 			}
 		}
 		else
 		{
-			JoinLobbyEvent(false, "An internal error occored!\nError Code: Http027", "", "");
+			JoinLobbyEvent(false, "Failed to deserialize returns\nError Code: Tcp003", "", "");
 		}
 	}
 
 
 }
 
+FSocket* UMenuHud::CreateSocket(const FString& Ip, int32 PortIndex)
+{
+
+	FSocket* LobbySocket = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateSocket(NAME_Stream, TEXT("default"), false);
+	FIPv4Address Address;
+	FIPv4Address::Parse(Ip, Address);
+	TSharedRef<FInternetAddr> addr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
+	addr->SetIp(Address.GetValue());
+	addr->SetPort(PortIndex);
+	bool Connected = LobbySocket->Connect(*addr);
+
+	return LobbySocket;
+
+}

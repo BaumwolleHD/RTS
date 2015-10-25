@@ -4,7 +4,7 @@
 	<ItemGroup>
 		<None Include="..\..\RTS.uproject" />
 		<Filter Include="Source">
-			<UniqueIdentifier>{E527CBFE-D56F-415D-A402-EA0BB5B4D1D4}</UniqueIdentifier>
+			<UniqueIdentifier>{BEA273BF-7329-492D-BF61-B76476234B24}</UniqueIdentifier>
 		</Filter>
 		<None Include="..\..\Source\RTS.Target.cs">
 			<Filter>Source</Filter>
@@ -13,7 +13,7 @@
 			<Filter>Source</Filter>
 		</None >
 		<Filter Include="Config">
-			<UniqueIdentifier>{D415C70C-09E9-488F-8580-CAE73C37A6FF}</UniqueIdentifier>
+			<UniqueIdentifier>{0C7FC04D-F1BD-46E2-B5AB-C6A8FBF01980}</UniqueIdentifier>
 		</Filter>
 		<None Include="..\..\Config\DefaultEngine.ini">
 			<Filter>Config</Filter>
@@ -22,7 +22,7 @@
 			<Filter>Config</Filter>
 		</None >
 		<Filter Include="Source\RTS">
-			<UniqueIdentifier>{A5CA5093-BDB7-4BAD-816A-48514971C58F}</UniqueIdentifier>
+			<UniqueIdentifier>{42CA7E03-9AED-4F3C-AC9A-B0B20F53249D}</UniqueIdentifier>
 		</Filter>
 		<ClCompile Include="..\..\Source\RTS\Building.cpp">
 			<Filter>Source\RTS</Filter>

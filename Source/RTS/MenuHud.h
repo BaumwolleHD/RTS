@@ -17,6 +17,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Login)
 	void GetServerData();
 
+	UFUNCTION(BlueprintCallable, Category = Login)
+	void GetUserData();
+	void SetUserData();
+
+
+	virtual void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
+	virtual void Construct();
+
 
 	UFUNCTION(BlueprintCallable, Category = Login)
 	void UserRegister(const FString& UserName, const FString& Password);
@@ -26,15 +34,14 @@ public:
 	void UserLogin(const FString& UserName, const FString& Password);
 	void OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = Login, meta = (Friendlyname = "LoginCompleteEvent"))
+	UFUNCTION(BlueprintImplementableEvent, Category = Login, meta = (DisplayName = "LoginCompleteEvent"))
 		void LoginCompleteEvent(bool bSuccess, const FString& Note);
 
 
 	UFUNCTION(BlueprintCallable, Category = Login)
 		void UserLogout(const FString& UserName, const FString& Password);
-	//void OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = Login, meta = (Friendlyname = "LogoutCompleteEvent"))
+	UFUNCTION(BlueprintImplementableEvent, Category = Login, meta = (DisplayName = "LogoutCompleteEvent"))
 	void LogoutCompleteEvent(bool bSuccess, const FString& Note);
 
 
@@ -42,7 +49,7 @@ public:
 		void CreateLobby(const FString& LobbyName, const FString& Password);
 	void OnCreateLobbyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "LobbycreationCompleteEvent"))
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (DisplayName = "LobbycreationCompleteEvent"))
 		void LobbycreationCompleteEvent(bool bSuccess, const FString& Note);
 
 
@@ -51,13 +58,13 @@ public:
 		void RefreshLobbylist();
 	void RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "RefreshLobbylistEvent"))
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (DisplayName = "RefreshLobbylistEvent"))
 		void RefreshLobbylistEvent(bool bSuccess, const FString& Note);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "AddLobbytoLobbylist"))
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (DisplayName = "AddLobbytoLobbylist"))
 		void AddLobbytoLobbylist(const FString& Name, const FString& Password, const FString& Map);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "ClearLobbylistEvent"))
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (DisplayName = "ClearLobbylistEvent"))
 		void ClearLobbylistEvent();
 
 
@@ -66,10 +73,16 @@ public:
 		void JoinLobby(const FString& LobbyName, const FString& Password);
 	void JoinLobbyResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (Friendlyname = "JoinLobbyEvent"))
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (DisplayName = "JoinLobbyEvent"))
 		void JoinLobbyEvent(bool bSuccess, const FString& Note, const FString& Lobbyname, const FString& Map);
 
 
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (DisplayName = "NoteEvent"))
+		void NoteEvent(const FString& Mode, const FString& Note);
+
+	float HeartbeatTimer;
+
+	bool IsConnected;
 
 	UPROPERTY()
 		FString Token;
@@ -83,11 +96,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = User)
 		FString CurrentUserName;
 
+	FSocket* CurrentSocket;
 
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Server)
+		bool ListenToServer;
 
 
-private:
+	
+	FSocket* CreateSocket(const FString& Ip, int32 Port);
+
+	FString StringFromBinaryArray(const TArray<uint8>& BinaryArray);
 	
 	FHttpModule* Http;
 
