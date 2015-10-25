@@ -156,6 +156,9 @@ void UMenuHud::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 						case 3:
 							JoinLobbyEvent(true, "Successfully joined lobby", LobbyName, LobbyMap);
 							break;
+						case 4:
+							NoteEvent("Success", "Player left your lobby");
+							break;
 
 
 						}
