@@ -70,18 +70,21 @@ void UMenuHud::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 				}
 				IsConnected = true;
 				GetUserData();
+				HeartbeatTimer = 5;
 				UE_LOG(LogTemp, Warning, TEXT("Heartbeat"))
 			}
 			else if (IsConnected)
 			{
 				IsConnected = false;
+				HeartbeatTimer = 1.5f;
 				NoteEvent("Fail", "Lost connection to server\nError Code: Tcp001");
 			}
 			else
 			{
+				HeartbeatTimer = 1.5f;
 				NoteEvent("Blink", "Trying to reconnect...");
 			}
-			HeartbeatTimer = 5;
+			
 
 		}
 		
@@ -151,10 +154,31 @@ void UMenuHud::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 							break;
 						case 2:
 							NoteEvent("Success", "Player joined your lobby");
-							CurrentSocket = NULL;
+							AddUsertoUserlist(PlayerList, 0);
 							break;
 						case 3:
 							JoinLobbyEvent(true, "Successfully joined lobby", LobbyName, LobbyMap);
+
+							LeftString = PlayerList + ":";
+							CurrentIndex = 0;
+
+							while (LeftString.Split(":", &CurrentData, &LeftString))
+							{
+								if (CurrentIndex > 10)
+								{
+									break;
+								}
+								UE_LOG(LogTemp, Warning, TEXT("Player: %s"), *CurrentData);
+								AddUsertoUserlist(CurrentData, 0);
+
+								CurrentIndex += 1;
+							}
+
+
+
+
+
+
 							break;
 						case 4:
 							NoteEvent("Success", "Player left your lobby");
@@ -497,6 +521,7 @@ void UMenuHud::RefreshLobbylistResponseReceived(FHttpRequestPtr Request, FHttpRe
 				return;
 			case 1:
 				RefreshLobbylistEvent(true, "No available Lobbies");
+				ClearLobbylistEvent();
 				break;
 			case 2:
 				RefreshLobbylistEvent(true, "Lobby list refreshed");
