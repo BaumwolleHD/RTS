@@ -9,6 +9,10 @@
 #include "PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
+//USavingFile* LoadGameInstance = Cast<USavingFile>(UGameplayStatics::CreateSaveGameObject(USavingFile::StaticClass()));
+//LoadGameInstance = Cast<USavingFile>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
+//FString CurrentToken = LoadGameInstance->Token;
+
 
 void UMenuHud::GetServerData()
 {
@@ -22,12 +26,14 @@ void UMenuHud::GetUserData()
 {
 	UMenuHud* Widget = Cast<UMenuHud>(Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0))->CurrentWidget);
 	CurrentUserName = Widget->CurrentUserName;
+	Token = Widget->Token;
 }
 
 void UMenuHud::SetUserData()
 {
 	UMenuHud* Widget = Cast<UMenuHud>(Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0))->CurrentWidget);
 	Widget->CurrentUserName = CurrentUserName;
+	Widget->Token = Token;
 }
 
 FString UMenuHud::StringFromBinaryArray(const TArray<uint8>& BinaryArray)
@@ -137,7 +143,8 @@ void UMenuHud::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 							CurrentIndex += 1;
 						}
 
-						//UE_LOG(LogTemp, Warning, TEXT("Joined: %d, %s, %s, %s"), Success, *PlayerList, *LobbyName, *LobbyMap);
+						
+						FString CurrentAttribute = "*"; FString LeftAttributes; FString UserName; int32 PermissionLevel = 0;
 						switch (Success)
 						{
 						case -1:
@@ -157,21 +164,39 @@ void UMenuHud::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 							AddUsertoUserlist(PlayerList, 0);
 							break;
 						case 3:
+
 							JoinLobbyEvent(true, "Successfully joined lobby", LobbyName, LobbyMap);
 
-							LeftString = PlayerList + ":";
-							CurrentIndex = 0;
+							LeftString = PlayerList + ",";
 
-							while (LeftString.Split(":", &CurrentData, &LeftString))
+							while (CurrentData != "" && LeftString.Split(",", &CurrentData, &LeftString))
 							{
-								if (CurrentIndex > 10)
-								{
-									break;
-								}
 								UE_LOG(LogTemp, Warning, TEXT("Player: %s"), *CurrentData);
-								AddUsertoUserlist(CurrentData, 0);
 
-								CurrentIndex += 1;
+								CurrentIndex = 0;
+								LeftAttributes = CurrentData + ":";
+
+								while (CurrentIndex < 2 && LeftAttributes.Split(":", &CurrentAttribute, &LeftAttributes))
+								{
+									UE_LOG(LogTemp, Warning, TEXT("PlayerData: %s"), *CurrentAttribute);
+
+									switch (CurrentIndex)
+									{
+									case 0:
+										UserName = CurrentAttribute;
+										break;
+									case 1:
+										PermissionLevel = FCString::Atoi(*CurrentAttribute);
+										break;
+									}
+									
+
+									CurrentIndex += 1;
+								}
+
+
+								
+								AddUsertoUserlist(UserName, PermissionLevel);
 							}
 
 
@@ -205,7 +230,6 @@ void UMenuHud::UserRegister(const FString& UserName, const FString& Password)
 		FString ActualPassword = FMD5::HashAnsiString(*Password);
 
 		FString JsonString;
-		//FString Salt = "joxR9yjVXXR4D6Rb";
 		TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
 
 		CurrentUserName = UserName;
@@ -291,10 +315,11 @@ void UMenuHud::UserLogin(const FString& UserName, const FString& Password)
 
 		FString ActualPassword = FMD5::HashAnsiString(*Password);
 
+
 		JsonWriter->WriteObjectStart();
 		JsonWriter->WriteValue("User", UserName);
 		JsonWriter->WriteValue("Pass", ActualPassword);
-		const FString& Salt = "joxR9yjVXXR4D6Rb";
+		//const FString& Salt = "joxR9yjVXXR4D6Rb";
 		JsonWriter->WriteValue("Secret", Salt);
 		JsonWriter->WriteObjectEnd();
 		JsonWriter->Close();
@@ -304,7 +329,7 @@ void UMenuHud::UserLogin(const FString& UserName, const FString& Password)
 
 		TSharedRef < IHttpRequest > Request = Http->CreateRequest();
 		Request->OnProcessRequestComplete().BindUObject(this, &UMenuHud::OnLoginResponseReceived);
-		Request->SetURL("http://"+Ip+"/api/users/login.php");
+		Request->SetURL("http://" + Ip + "/api/users/login.php");
 		Request->SetVerb("POST");
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
@@ -325,6 +350,7 @@ void UMenuHud::OnLoginResponseReceived(FHttpRequestPtr Request, FHttpResponsePtr
 	if (bWasSuccessful)
 	{
 		FString Content = Response->GetContentAsString();
+		UE_LOG(LogTemp, Warning, TEXT("%s"),*Content);
 		TSharedRef< TJsonReader<TCHAR> > Reader = TJsonReaderFactory<TCHAR>::Create(Content);
 		TSharedPtr<FJsonObject> JsonParsed;
 		if (FJsonSerializer::Deserialize(Reader, JsonParsed))
@@ -395,17 +421,14 @@ void UMenuHud::CreateLobby(const FString& LobbyName, const FString& Password)
 		FString JsonString;
 		TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
 
-
-		USavingFile* LoadGameInstance = Cast<USavingFile>(UGameplayStatics::CreateSaveGameObject(USavingFile::StaticClass()));
-		LoadGameInstance = Cast<USavingFile>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
-		FString CurrentToken = LoadGameInstance->Token;
+		GetUserData();
 
 
 		JsonWriter->WriteObjectStart();
 		JsonWriter->WriteValue("GameName", LobbyName);
 		JsonWriter->WriteValue("Password", ActualPassword);
 		JsonWriter->WriteValue("Secret", Salt);
-		JsonWriter->WriteValue("Token", CurrentToken);
+		JsonWriter->WriteValue("Token", Token);
 		JsonWriter->WriteObjectEnd();
 		JsonWriter->Close();
 
@@ -476,14 +499,11 @@ void UMenuHud::RefreshLobbylist()
 	FString JsonString;
 	TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
 
-
-	USavingFile* LoadGameInstance = Cast<USavingFile>(UGameplayStatics::CreateSaveGameObject(USavingFile::StaticClass()));
-	LoadGameInstance = Cast<USavingFile>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
-	FString CurrentToken = LoadGameInstance->Token;
+	GetUserData();
 
 	JsonWriter->WriteObjectStart();
 	JsonWriter->WriteValue("Secret", Salt);
-	JsonWriter->WriteValue("Token", CurrentToken);
+	JsonWriter->WriteValue("Token", Token);
 	JsonWriter->WriteObjectEnd();
 	JsonWriter->Close();
 
@@ -603,17 +623,14 @@ void UMenuHud::JoinLobby(const FString& LobbyName, const FString& Password)
 		FString JsonString;
 		TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
 
-
-		USavingFile* LoadGameInstance = Cast<USavingFile>(UGameplayStatics::CreateSaveGameObject(USavingFile::StaticClass()));
-		LoadGameInstance = Cast<USavingFile>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
-		FString CurrentToken = LoadGameInstance->Token;
+		GetUserData();
 
 
 		JsonWriter->WriteObjectStart();
 		JsonWriter->WriteValue("GameName", LobbyName);
 		JsonWriter->WriteValue("GamePassword", ActualPassword);
 		JsonWriter->WriteValue("Secret", Salt);
-		JsonWriter->WriteValue("Token", CurrentToken);
+		JsonWriter->WriteValue("Token", Token);
 		JsonWriter->WriteObjectEnd();
 		JsonWriter->Close();
 
@@ -676,7 +693,7 @@ void UMenuHud::JoinLobbyResponseReceived(FHttpRequestPtr Request, FHttpResponseP
 
 				GetUserData();
 
-				FString Serialized = TEXT("Join;" + Name + ";" + CurrentUserName + Password + "|");
+				FString Serialized = TEXT("Join;" + Name + ";" + CurrentUserName + ";" + Token + Password + "|");
 
 				UE_LOG(LogTemp, Warning, TEXT("Sending Data: %s"), *Serialized);
 
