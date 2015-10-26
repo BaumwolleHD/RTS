@@ -161,10 +161,28 @@ void UMenuHud::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 							break;
 						case 2:
 							NoteEvent("Success", "Player joined your lobby");
-							AddUsertoUserlist(PlayerList, 0);
+							CurrentIndex = 0;
+							LeftAttributes = CurrentData + ":";
+
+							while (CurrentIndex < 2 && LeftAttributes.Split(":", &CurrentAttribute, &LeftAttributes))
+							{
+								UE_LOG(LogTemp, Warning, TEXT("PlayerData: %s"), *CurrentAttribute);
+
+								switch (CurrentIndex)
+								{
+								case 0:
+									UserName = CurrentAttribute;
+									break;
+								case 1:
+									PermissionLevel = FCString::Atoi(*CurrentAttribute);
+									break;
+								}
+								CurrentIndex += 1;
+							}
+							AddUsertoUserlist(UserName, PermissionLevel);
 							break;
 						case 3:
-
+							ClearUserlistEvent();
 							JoinLobbyEvent(true, "Successfully joined lobby", LobbyName, LobbyMap);
 
 							LeftString = PlayerList + ",";

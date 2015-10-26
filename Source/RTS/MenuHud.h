@@ -97,6 +97,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (DisplayName = "AddUsertoUserlist"))
 		void AddUsertoUserlist(const FString& Name, int32 PermissionLevel);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = LobbyManegment, meta = (DisplayName = "ClearUserlistEvent"))
+		void ClearUserlistEvent();
+
 
 
 
