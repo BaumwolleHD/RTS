@@ -22,6 +22,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Storage)
 		int32 Type;
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = BaseSetup)
+		USceneComponent* Root;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = BaseSetup)
 		UStaticMeshComponent* Mesh0;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = BaseSetup)
@@ -43,16 +47,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = BaseSetup)
 		UStaticMeshComponent* Mesh9;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = BaseSetup)
+		TArray<UStaticMeshComponent*> Meshes;
+
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Visuals)
-		TArray<UStaticMesh*> VisualMeshEven;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Visuals)
-		TArray<UStaticMesh*> VisualMeshOdd;
+		TArray<UStaticMesh*> VisualMeshes;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Visuals)
+	//	TArray<UStaticMesh*> VisualMeshOdd;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Structure)
 		int32 ItemsPerLayer;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Structure)
-		float ItemHeight;
 
 	void Sort();
 
@@ -60,7 +66,35 @@ public:
 		void SendStackUpdateToClients(int32 ServerQuantity);
 	void SendStackUpdateToClients_Implementation(int32 ServerQuantity);
 
+
+	//Construct Meshes
+	UFUNCTION(BlueprintCallable, Category = PreSorting)
+		void ConstructMeshes(UStaticMesh* Mesh);
+
+	//Construct Location
+	UFUNCTION(BlueprintCallable, Category = PreSorting)
+		void ConstructLocationByConstantOffset(FVector Offset);
+
+	UFUNCTION(BlueprintCallable, Category = PreSorting)
+		void ConstructLocationByOffsetPerLayer(FVector Offset);
+
+	UFUNCTION(BlueprintCallable, Category = PreSorting)
+		void ConstructLocationByPyramide(FVector ItemSize, FVector ItemSizeDeviation, int32 FloorItems, int32 ItemSubstractionPerLayer, FRotator RotationOffsetPerLayer, FRotator RotationOffsetDeviation);
+
+	//Construct Rotation
+	UFUNCTION(BlueprintCallable, Category = PreSorting)
+		void ConstructRotationByRotator(FRotator Offset);
+
+	//Construct Scale
+	UFUNCTION(BlueprintCallable, Category = PreSorting)
+		void ConstructScaleByVector(FVector Scale);
+
+	UFUNCTION(BlueprintCallable, Category = PreSorting)
+		void ConstructScaleByFloat(float Scale);
+
 private:
 	UStaticMesh* GetMeshByLayerItems(int32 LayerItems, int32 Layer);
+
+
 
 };

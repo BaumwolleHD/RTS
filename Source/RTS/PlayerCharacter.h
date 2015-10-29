@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
+#include "NpcController.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -86,7 +87,7 @@ public:
 		TArray<APawn*> StorageNpcs;
 
 	//Npc Networking
-	TArray<APawn*> GetNpcsByState(TArray<APawn*> NpcArray, FString Job, FString Task);
+	TArray<APawn*> GetNpcsByState(TArray<APawn*> NpcArray, ENpcJob Job, ENpcTask Task);
 
 
 	//Synced stuff
@@ -117,7 +118,8 @@ public:
 
 
 	//Resorces
-	void ChangeItem(int32 Quantity, int32 ID);
+	bool ChangeItem(int32 Quantity, int32 ID);
+	int32 CheckForQuantity(int32 ID);
 
 
 	//Mode Changes (Hud)

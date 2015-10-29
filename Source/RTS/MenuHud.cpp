@@ -266,7 +266,7 @@ void UMenuHud::UserRegister(const FString& UserName, const FString& Password)
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
 
-		if (Request->ProcessRequest())
+		if (!Request->ProcessRequest())
 		{
 			LoginCompleteEvent(false, "Connection timed out\nError Code: Http001");
 		}
@@ -351,6 +351,7 @@ void UMenuHud::UserLogin(const FString& UserName, const FString& Password)
 		Request->SetVerb("POST");
 		Request->SetHeader("Content-Type", "application/x-www-form-urlencoded");
 		Request->SetContentAsString(JsonString);
+
 		if (!Request->ProcessRequest())
 		{
 			LoginCompleteEvent(false, "Connection timed out\nError Code: Http009");

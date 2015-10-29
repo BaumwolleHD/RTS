@@ -31,7 +31,7 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	UGameplayStatics::GetPlayerController(this, 0)->bShowMouseCursor = true;
 
-	if (HudWidgetClass != nullptr && Role < ROLE_Authority)
+	if (HudWidgetClass != nullptr)
 	{
 		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), HudWidgetClass);
 		if (CurrentWidget)
@@ -338,7 +338,7 @@ void APlayerCharacter::BuildingPreview()
 	}
 }
 
-TArray<APawn*> APlayerCharacter::GetNpcsByState(TArray<APawn*> NpcArray, FString Job, FString Task)
+TArray<APawn*> APlayerCharacter::GetNpcsByState(TArray<APawn*> NpcArray, ENpcJob Job, ENpcTask Task)
 {
 	TArray<APawn*> ReturnedActors;
 	for (int32 Index = 0; Index < NpcArray.Num(); Index++)
@@ -346,7 +346,7 @@ TArray<APawn*> APlayerCharacter::GetNpcsByState(TArray<APawn*> NpcArray, FString
 		ANpcController* const Npc = Cast<ANpcController>(NpcArray[Index]->GetController());
 		if (Npc)
 		{
-			if (Task == "" && Npc->Task == Task || Job == "" && Npc->Job == Job || Npc->Task == Task && Npc->Job == Job)
+			if (Task == ENpcTask::Empty && Npc->Tasks[0] == Task || Job == ENpcJob::Empty && Npc->Job == Job || Npc->Tasks[0] == Task && Npc->Job == Job)
 			{
 				ReturnedActors.Add(NpcArray[Index]);
 			}
@@ -356,9 +356,9 @@ TArray<APawn*> APlayerCharacter::GetNpcsByState(TArray<APawn*> NpcArray, FString
 	return ReturnedActors;
 }
 
-void APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
+int32 APlayerCharacter::CheckForQuantity(int32 ID)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%d"), OwnedStorageBlocks.Num());
+	int32 Quantity = 0;
 	for (int32 BlockIndex = 0; BlockIndex < OwnedStorageBlocks.Num(); BlockIndex++)
 	{
 		AStorageBlock* const Block = Cast<AStorageBlock>(OwnedStorageBlocks[BlockIndex]);
@@ -371,25 +371,18 @@ void APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 				{
 					if (Stack->GetClass() == ItemClasses[ID])
 					{
-						if (Quantity + Stack->Quantity <= Stack->MaxQuantity)
-						{
-							Stack->Quantity += Quantity;
-							Stack->Sort();
-							Quantity = 0;
-							return;
-						}
-						else
-						{
-							Quantity -= Stack->MaxQuantity - Stack->Quantity;
-							Stack->Quantity = Stack->MaxQuantity;
-							Stack->Sort();
-						}
+						Quantity += Stack->Quantity;
 					}
 				}
 			}
 		}
 	}
+	return Quantity;
 
+}
+
+bool APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
+{
 	for (int32 BlockIndex = 0; BlockIndex < OwnedStorageBlocks.Num(); BlockIndex++)
 	{
 		AStorageBlock* const Block = Cast<AStorageBlock>(OwnedStorageBlocks[BlockIndex]);
@@ -398,37 +391,83 @@ void APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 			for (int32 StackIndex = 0; StackIndex < Block->StorageStacks.Num(); StackIndex++)
 			{
 				AStorageStack* const Stack = Cast<AStorageStack>(Block->StorageStacks[StackIndex]);
-				if (!Stack)
+				if (Stack)
 				{
-					UWorld* World = GetWorld();
-					if (World)
+					if (Stack->GetClass() == ItemClasses[ID])
 					{
-
-						FActorSpawnParameters SpawnParameters;
-						SpawnParameters.Owner = Block;
-						SpawnParameters.Instigator = Instigator;
-						const FVector Location = Block->GetItemPosition(StackIndex);
-						AStorageStack* const Stack = World->SpawnActor<AStorageStack>(ItemClasses[ID], Location, FRotator(0.f, 0.f, 0.f), SpawnParameters);
-						Block->StorageStacks[StackIndex] = Stack;
-						Stack->SetActorRotation(FRotator(0, int(FMath::RandBool())*90.f, 0));
-						Stack->SetActorScale3D(FVector(0.1f,0.1f,0.1f));
-
-
-
-						if (Block->StorageStacks[StackIndex]->GetClass() == ItemClasses[ID])
+						if (Quantity + Stack->Quantity <= Stack->MaxQuantity && Quantity + Stack->Quantity > 0)
 						{
-							if (Quantity <= Stack->MaxQuantity)
+							Stack->Quantity += Quantity;
+							Stack->Sort();
+							Quantity = 0;
+							return true;
+						}
+						else if (Quantity + Stack->Quantity == Stack->MaxQuantity)
+						{
+							Quantity -= Stack->MaxQuantity - Stack->Quantity;
+							Stack->Quantity = Stack->MaxQuantity;
+							Stack->Sort();
+						}
+						else if (Quantity + Stack->Quantity == 0)
+						{
+							Quantity += Stack->Quantity;
+							int32 StorageStackIndex = 0;
+							Block->StorageStacks.Find(Stack, StorageStackIndex);
+							Block->StorageStacks[StorageStackIndex] = NULL;
+							Stack->Destroy();
+
+						}
+					}
+				}
+			}
+		}
+	}
+	if (Quantity == 0)
+	{
+		return true;
+	}
+	if (Quantity > 0)
+	{
+		for (int32 BlockIndex = 0; BlockIndex < OwnedStorageBlocks.Num(); BlockIndex++)
+		{
+			AStorageBlock* const Block = Cast<AStorageBlock>(OwnedStorageBlocks[BlockIndex]);
+			if (Block && Block->BuildProgressionState == 5)
+			{
+				for (int32 StackIndex = 0; StackIndex < Block->StorageStacks.Num(); StackIndex++)
+				{
+					AStorageStack* const Stack = Cast<AStorageStack>(Block->StorageStacks[StackIndex]);
+					if (!Stack)
+					{
+						UWorld* World = GetWorld();
+						if (World)
+						{
+
+							FActorSpawnParameters SpawnParameters;
+							SpawnParameters.Owner = Block;
+							SpawnParameters.Instigator = Instigator;
+							FVector Location = Block->GetItemPosition(StackIndex);
+							AStorageStack* const Stack = World->SpawnActor<AStorageStack>(ItemClasses[ID], Location, FRotator(0.f, 0.f, 0.f), SpawnParameters);
+							Block->StorageStacks[StackIndex] = Stack;
+							Stack->SetActorRotation(FRotator(0, int(FMath::RandBool())*90.f, 0));
+							Stack->SetActorScale3D(FVector(0.2f, 0.2f, 0.2f));
+
+
+
+							if (Block->StorageStacks[StackIndex]->GetClass() == ItemClasses[ID])
 							{
-								Stack->Quantity = Quantity;
-								Stack->Sort();
-								Quantity = 0;
-								return;
-							}
-							else
-							{
-								Quantity -= Stack->MaxQuantity - Stack->Quantity;
-								Stack->Quantity = Stack->MaxQuantity;
-								Stack->Sort();
+								if (Quantity <= Stack->MaxQuantity)
+								{
+									Stack->Quantity = Quantity;
+									Stack->Sort();
+									Quantity = 0;
+									return true;
+								}
+								else
+								{
+									Quantity -= Stack->MaxQuantity - Stack->Quantity;
+									Stack->Quantity = Stack->MaxQuantity;
+									Stack->Sort();
+								}
 							}
 						}
 					}
@@ -436,6 +475,7 @@ void APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 			}
 		}
 	}
+	return false;
 }
 
 void APlayerCharacter::SetModeToBuildExtend()

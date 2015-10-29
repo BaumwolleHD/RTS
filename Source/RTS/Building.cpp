@@ -96,6 +96,10 @@ void ABuilding::SendBuildStateUpdateToClients_Implementation(float Prog)
 		BuildProgression = Prog;
 		BuildProgressionState = CalculateState(BuildProgression, 5);
 	}
-	if (BuildProgressionState > 0 && BuildProgressionState <= 5) { BaseMesh->SetStaticMesh(BuildMeshes[BuildProgressionState - 1]); }
+	if (BuildProgressionState > 0 && BuildProgressionState <= 5) 
+	{ 
+		BaseMesh->SetStaticMesh(BuildMeshes[BuildProgressionState - 1]); 
+		if (BuildProgressionState == 5){ BuildingComplete(); }
+	}
 }
 
