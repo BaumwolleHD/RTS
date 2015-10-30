@@ -7,6 +7,8 @@
 // Sets defaultvalues
 AStorageStack::AStorageStack()
 {
+	RootComponent = Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+
 	Mesh0 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh0"));
 	Mesh1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh1"));
 	Mesh2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh2"));
@@ -18,44 +20,134 @@ AStorageStack::AStorageStack()
 	Mesh8 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh8"));
 	Mesh9 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh9"));
 
-	RootComponent = Mesh0;
-	Mesh1->AttachTo(Mesh0);
-	Mesh2->AttachTo(Mesh0);
-	Mesh3->AttachTo(Mesh0);
-	Mesh4->AttachTo(Mesh0);
-	Mesh5->AttachTo(Mesh0);
-	Mesh6->AttachTo(Mesh0);
-	Mesh7->AttachTo(Mesh0);
-	Mesh8->AttachTo(Mesh0);
-	Mesh9->AttachTo(Mesh0);
+
+	Mesh0->AttachTo(Root);
+	Mesh1->AttachTo(Root);
+	Mesh2->AttachTo(Root);
+	Mesh3->AttachTo(Root);
+	Mesh4->AttachTo(Root);
+	Mesh5->AttachTo(Root);
+	Mesh6->AttachTo(Root);
+	Mesh7->AttachTo(Root);
+	Mesh8->AttachTo(Root);
+	Mesh9->AttachTo(Root);
+
+	
+
+
 
 
 	bReplicates = true;
 
 }
 
-// Called when the game starts or when spawned
+void AStorageStack::ConstructMeshes(UStaticMesh* Mesh)
+{
+	Meshes.SetNum(0);
+	Meshes.Add(Mesh0);
+	Meshes.Add(Mesh1);
+	Meshes.Add(Mesh2);
+	Meshes.Add(Mesh3);
+	Meshes.Add(Mesh4);
+	Meshes.Add(Mesh5);
+	Meshes.Add(Mesh6);
+	Meshes.Add(Mesh7);
+	Meshes.Add(Mesh8);
+	Meshes.Add(Mesh9);
+
+	for (int32 Index = 0; Index < Meshes.Num(); Index++)
+	{
+		Meshes[Index]->SetStaticMesh(Mesh);
+	}
+
+}
+
+void AStorageStack::ConstructLocationByConstantOffset(FVector Offset)
+{
+	for (int32 Index = 0; Index < Meshes.Num(); Index++)
+	{
+		Meshes[Index]->AddRelativeLocation(FVector(Offset));
+	}
+}
+
+void AStorageStack::ConstructLocationByOffsetPerLayer(FVector Offset)
+{
+	for (int32 Index = 0; Index < Meshes.Num(); Index++)
+	{
+		Meshes[Index]->SetRelativeLocation(FVector(Offset.X * Index, Offset.Y * Index, Offset.Z * Index));
+	}
+}
+
+void AStorageStack::ConstructLocationByPyramide(FVector ItemSize, FVector ItemSizeDeviation, int32 FloorItems, int32 ItemSubstractionPerLayer, FRotator RotationOffsetPerLayer, FRotator RotationOffsetDeviation)
+{
+	int32 CurrentLayerItems = FloorItems;
+	int32 CurrentLayer = 0;
+	FVector SizeDeviation;
+	FRotator RotationDevaition;
+	int32 CurrentItems = 0;
+
+
+	for (int32 Index = 0; Index < Meshes.Num(); Index++)
+	{
+
+		SizeDeviation.X = FMath::FRandRange(-ItemSizeDeviation.X / 2, ItemSizeDeviation.X / 2);
+		SizeDeviation.Y = FMath::FRandRange(-ItemSizeDeviation.Y / 2, ItemSizeDeviation.Y / 2);
+		SizeDeviation.Z = FMath::FRandRange(-ItemSizeDeviation.Z / 2, ItemSizeDeviation.Z / 2);
+
+		Meshes[Index]->SetRelativeLocation(SizeDeviation + FVector((CurrentLayerItems - FloorItems * 0.5f - 0.5f) * ItemSize.X, (CurrentLayerItems - FloorItems * 0.5f - 0.5f) * ItemSize.Y, ItemSize.Z * CurrentLayer));
+		
+		RotationDevaition.Roll = FMath::FRandRange(-RotationOffsetDeviation.Roll / 2, RotationOffsetDeviation.Roll / 2);
+		RotationDevaition.Pitch = FMath::FRandRange(-RotationOffsetDeviation.Pitch / 2, RotationOffsetDeviation.Pitch / 2);
+		RotationDevaition.Yaw = FMath::FRandRange(-RotationOffsetDeviation.Yaw / 2, RotationOffsetDeviation.Yaw / 2);
+
+		Meshes[Index]->AddRelativeRotation(RotationOffsetPerLayer*CurrentLayer + RotationDevaition);
+
+
+		CurrentLayerItems--;
+		CurrentItems++;
+		if (CurrentItems == MaxQuantity)
+		{
+			break;
+		}
+		else if (CurrentLayerItems == 0)
+		{
+			CurrentLayer++;
+			FloorItems -= ItemSubstractionPerLayer;
+			CurrentLayerItems = FloorItems;
+			
+		}
+	}
+
+}
+
+
+void AStorageStack::ConstructRotationByRotator(FRotator Offset)
+{
+	for (int32 Index = 0; Index < Meshes.Num(); Index++)
+	{
+		Meshes[Index]->SetRelativeRotation(Offset);
+	}
+}
+
+void AStorageStack::ConstructScaleByVector(FVector Scale)
+{
+	for (int32 Index = 0; Index < Meshes.Num(); Index++)
+	{
+		Meshes[Index]->SetRelativeScale3D(Scale);
+	}
+}
+
+void AStorageStack::ConstructScaleByFloat(float Scale)
+{
+	for (int32 Index = 0; Index < Meshes.Num(); Index++)
+	{
+		Meshes[Index]->SetRelativeScale3D(FVector(Scale,Scale,Scale));
+	}
+}
+
 void AStorageStack::BeginPlay()
 {
 	Super::BeginPlay();
-	Mesh1->SetRelativeLocation(FVector(0.f, 0.f, ItemHeight * 1));
-	Mesh2->SetRelativeLocation(FVector(0.f, 0.f, ItemHeight * 2));
-	Mesh3->SetRelativeLocation(FVector(0.f, 0.f, ItemHeight * 3));
-	Mesh4->SetRelativeLocation(FVector(0.f, 0.f, ItemHeight * 4));
-	Mesh5->SetRelativeLocation(FVector(0.f, 0.f, ItemHeight * 5));
-	Mesh6->SetRelativeLocation(FVector(0.f, 0.f, ItemHeight * 6));
-	Mesh7->SetRelativeLocation(FVector(0.f, 0.f, ItemHeight * 7));
-	Mesh8->SetRelativeLocation(FVector(0.f, 0.f, ItemHeight * 8));
-	Mesh9->SetRelativeLocation(FVector(0.f, 0.f, ItemHeight * 9));
-
-	//insert to character list
-	//APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(this->GetOwner()->GetOwner());
-	//if (PlayerCharacter)
-	//{
-	//	PlayerCharacter->OwnedStorageStacks.Add(this);
-
-	//}
-
 }
 
 void AStorageStack::Sort()
@@ -63,11 +155,6 @@ void AStorageStack::Sort()
 	if (Role == ROLE_Authority)
 	{
 		SendStackUpdateToClients(Quantity);
-
-
-
-
-
 	}
 }
 
@@ -80,61 +167,23 @@ void AStorageStack::SendStackUpdateToClients_Implementation(int32 ServerQuantity
 	}
 	int32 CurrentQuantity = 0;
 	int32 LayerItems = 0;
-	for (int32 Index = 0; Index <= FMath::CeilToInt(Quantity) + ItemsPerLayer; Index += ItemsPerLayer)
+//	for (int32 Index = 0; Index <= FMath::CeilToInt(Quantity) + ItemsPerLayer; Index += ItemsPerLayer)
+	for (int32 LayerIndex = 0; LayerIndex < 10; LayerIndex++)
 	{
-		if (CurrentQuantity < Quantity)
-		{
 
-			LayerItems = FMath::Min(ItemsPerLayer, Quantity - CurrentQuantity);
-			CurrentQuantity += LayerItems;
-
-
-			switch (Index / ItemsPerLayer)
-			{
-			case 0:
-				Mesh0->SetStaticMesh(GetMeshByLayerItems(LayerItems, 0));
-				break;
-			case 1:
-				Mesh1->SetStaticMesh(GetMeshByLayerItems(LayerItems, 1));
-				break;
-			case 2:
-				Mesh2->SetStaticMesh(GetMeshByLayerItems(LayerItems, 2));
-				break;
-			case 3:
-				Mesh3->SetStaticMesh(GetMeshByLayerItems(LayerItems, 3));
-				break;
-			case 4:
-				Mesh4->SetStaticMesh(GetMeshByLayerItems(LayerItems, 4));
-				break;
-			case 5:
-				Mesh5->SetStaticMesh(GetMeshByLayerItems(LayerItems, 5));
-				break;
-			case 6:
-				Mesh6->SetStaticMesh(GetMeshByLayerItems(LayerItems, 6));
-				break;
-			case 7:
-				Mesh7->SetStaticMesh(GetMeshByLayerItems(LayerItems, 7));
-				break;
-			case 8:
-				Mesh8->SetStaticMesh(GetMeshByLayerItems(LayerItems, 8));
-				break;
-			case 9:
-				Mesh9->SetStaticMesh(GetMeshByLayerItems(LayerItems, 9));
-				break;
-
-			}
-		}
+		LayerItems = FMath::Min(ItemsPerLayer, Quantity - CurrentQuantity);
+		CurrentQuantity += LayerItems;
+		if (LayerIndex >= 0 && LayerIndex < Meshes.Num()){ Meshes[LayerIndex]->SetStaticMesh(GetMeshByLayerItems(LayerItems, LayerIndex)); }
 	}
 }
 
 UStaticMesh* AStorageStack::GetMeshByLayerItems(int32 LayerItems, int32 Layer)
 {
-	if (Layer % 2) {
-		return VisualMeshEven[LayerItems - 1];
-
+	if (LayerItems > 0)
+	{
+		return VisualMeshes[LayerItems - 1];
 	}
-	else {
-
-		return VisualMeshOdd[LayerItems - 1];
-	}
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Layer: %d"), LayerItems, Layer);
+	return NULL;
 }

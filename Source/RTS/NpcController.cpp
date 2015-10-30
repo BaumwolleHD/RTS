@@ -1,5 +1,3 @@
- //Fill out your copyright notice in the Description page of Project Settings.
-
 #include "RTS.h"
 #include "NpcController.h"
 #include "ResourceBuilding.h"
@@ -10,7 +8,8 @@ ANpcController::ANpcController()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	Task = "Free";
+	Tasks.Add(ENpcTask::Free);
+	TargetActors.AddDefaulted();
 }
 
 
@@ -27,9 +26,13 @@ void ANpcController::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 
-	if (IsTargetReached())
+	if (IsTargetReached() || Tasks[0] == ENpcTask::Free && Tasks.Num() > 1)
 	{
+
+
 		FindNextTask();
+
+	
 	}
 	else
 	{
@@ -40,24 +43,110 @@ void ANpcController::Tick(float DeltaTime)
 
 void ANpcController::FindNextTask()
 {
-	if (Task == "MoveToPickup")
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn()->GetOwner());
+	switch (Tasks[0])
 	{
-		AResourceBuilding* const Building = Cast<AResourceBuilding>(TargetActor);
+	case ENpcTask::Free:
+		break;
+
+	case ENpcTask::PickupItemsFromBuilding:
+
+		AResourceBuilding* Building;
+		Building = Cast<AResourceBuilding>(TargetActors[0]);
 		if (Building)
 		{
-			ItemID = Building->ProductionID;
-			ItemQuantity = Building->ProductionQuantity;
+			CarriedItemID = Building->ProductionID;
+			CarriedItemQuantity = Building->ProductionQuantity;
 			Building->GrowProgression = 0.f;
 			Building->GrowProgressionState = 0;
 			Building->SendGrowStateUpdateToClients(0.f);
-			
-			SetTaskToStorage();
-			
+
 		}
+		break;
+
+
+
+	case ENpcTask::DropItemsToStorage:
+		if (PlayerCharacter){ PlayerCharacter->ChangeItem(CarriedItemQuantity, CarriedItemID); }
+		CarriedItemID = CarriedItemQuantity = 0;
+		//Task = ENpcTask::Free;
+		break;
+
+	case ENpcTask::PickupItemsFromStorage:
+		CarriedItemID = NeededItemID;
+		CarriedItemQuantity = FMath::Min(NeededItemQuantity, PlayerCharacter->CheckForQuantity(NeededItemID));
+		if (PlayerCharacter){ PlayerCharacter->ChangeItem(CarriedItemQuantity, CarriedItemID); }
+		break;
+
+
+	case ENpcTask::DropItemsToBuilding:
+		Building = Cast<AResourceBuilding>(TargetActors[0]);
+		if (Building)
+		{
+			Building->CurrentConsumptionQuantity = FMath::Min(Building->ConsumptionQuantity, Building->CurrentConsumptionQuantity + CarriedItemQuantity);
+			CarriedItemID = CarriedItemQuantity = 0;
+			Building->GrowProgressionState = 0;
+		}
+		break;
+
+
+
 	}
-	else if (Task == "MoveToStorage")
+
+	Tasks.RemoveAt(0);
+	if (Tasks.Num() == 0)
+	{ 
+		Tasks.Add(ENpcTask::Free); 
+	}
+	else
 	{
-		PlaceItemsInStorage();
+
+
+		if (TargetActors.Num() == 0)
+		{
+			Moving = false;
+			return;
+		}
+		else
+		{
+			TargetActors.RemoveAt(0);
+		}
+
+
+		Moving = true;
+		switch (Tasks[0])
+		{
+		case ENpcTask::Free:
+			Moving = false;
+			return;
+
+		case ENpcTask::DropItemsToBuilding:
+			TargetLocation = TargetActors[0]->GetActorLocation();
+			break;
+
+		case ENpcTask::DropItemsToStorage:
+			if (PlayerCharacter && PlayerCharacter->OwnedStorageBuilding)
+			{
+				//TargetActor = PlayerCharacter->OwnedStorageBuilding;
+				TargetLocation = PlayerCharacter->OwnedStorageBuilding->GetActorLocation();
+			}
+			break;
+
+		case ENpcTask::PickupItemsFromBuilding:
+			TargetLocation = TargetActors[0]->GetActorLocation();
+			break;
+
+		case ENpcTask::PickupItemsFromStorage:
+			if (PlayerCharacter && PlayerCharacter->OwnedStorageBuilding)
+			{
+				//TargetActor = PlayerCharacter->OwnedStorageBuilding;
+				TargetLocation = PlayerCharacter->OwnedStorageBuilding->GetActorLocation();
+			}
+
+			break;
+
+		}
+		
 	}
 
 }
@@ -96,41 +185,9 @@ void ANpcController::MoveToTarget()
 	}
 }
 
-void ANpcController::SetTarget(AActor* Target)
+void ANpcController::AddTask(ENpcTask Task, AActor* TargetActor)
 {
-	TargetActor = Target;
-	TargetLocation = Target->GetActorLocation();
+	Tasks.Add(Task);
+	TargetActors.Add(TargetActor);
 }
 
-void ANpcController::SetTaskToPickup(AActor* TargetResourceBuilding)
-{
-	TargetActor = TargetResourceBuilding;
-	TargetLocation = TargetResourceBuilding->GetActorLocation();
-	Moving = true;
-	Task = "MoveToPickup";
-}
-
-void ANpcController::SetTaskToStorage()
-{
-	TargetLocation = FVector(0, 0, 0);
-	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn()->GetOwner());
-	if (PlayerCharacter && PlayerCharacter->OwnedStorageBuilding)
-	{
-		TargetActor = PlayerCharacter->OwnedStorageBuilding;
-		TargetLocation = TargetActor->GetActorLocation();
-	}
-	Task = "MoveToStorage";
-	Moving = true;
-}
-
-int32 ANpcController::PlaceItemsInStorage()
-{
-	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn()->GetOwner());
-	if (PlayerCharacter)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("%d, %d, %d"), ItemID, ItemQuantity, PlayerCharacter->OwnedStorageBlock.Num());
-		PlayerCharacter->ChangeItem(ItemQuantity, ItemID);
-		Task = "Free";
-	}
-	return 0;
-}

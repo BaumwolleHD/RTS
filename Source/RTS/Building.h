@@ -65,4 +65,7 @@ public:
 	void SendBuildStateUpdateToClients_Implementation(float Prog);
 
 	int32 CalculateState(float Prog, int32 Steps);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = Building)
+		void BuildingComplete();
 };
