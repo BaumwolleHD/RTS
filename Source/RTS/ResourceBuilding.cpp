@@ -59,25 +59,29 @@ void AResourceBuilding::Tick(float DeltaTime)
 				SendGrowStateUpdateToClients(GrowProgression);
 				GrowProgressionState = CurrentGrowProgressionState;
 			}
-
-
-		
-
-			int32 CurrentConsumeProgressionState = CalculateState(1 - GrowProgression, ConsumeMeshes.Num());
-			if (GrowProgressionState != CurrentConsumeProgressionState)
+			if (GrowProgressionState == GrowMeshes.Num())
 			{
-				SendGrowStateUpdateToClients(1 - GrowProgression);
-				//ConsumeProgressionState = CurrentConsumeProgressionState;
+				CurrentProductionQuantity = ProductionQuantity;
+				IsGrowing = false;
 			}
 
+		
+			if (ConsumptionQuantity > 0)
+			{
+				int32 CurrentConsumeProgressionState = CalculateState(1 - GrowProgression, ConsumeMeshes.Num() + 1) - 1;
+				if (ConsumeProgressionState != CurrentConsumeProgressionState)
+				{
+					SendConsumeStateUpdateToClients(1 - GrowProgression);
+				}
+			}
 
 		}
-		else if (GrowProgressionState == 0 && (ConsumptionQuantity == 0 || CurrentConsumptionQuantity == ConsumptionQuantity ))
+		else if (GrowProgressionState == 0 && CurrentProductionQuantity == 0 && (ConsumptionQuantity == 0 || CurrentConsumptionQuantity == ConsumptionQuantity ))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Start"));
 			IsGrowing = true;
+			if (Role == ROLE_Authority) { SendGrowStateUpdateToClients(0.f); }
 		}
-		else if (GrowProgressionState != GrowMeshes.Num() + 1 && (GrowProgressionState == GrowMeshes.Num() || GrowProgressionState == 0 && CurrentConsumptionQuantity < ConsumptionQuantity && PlayerCharacter->CheckForQuantity(ConsumptionID) >= ConsumptionQuantity - CurrentConsumptionQuantity))
+		else if (GrowProgressionState != GrowMeshes.Num() + 1 && (GrowProgressionState == GrowMeshes.Num() || GrowProgressionState == 0 && CurrentConsumptionQuantity < ConsumptionQuantity && PlayerCharacter->CheckForQuantity(ConsumptionID) >= ConsumptionQuantity - CurrentConsumptionQuantity) || CurrentProductionQuantity > 0)
 		{
 			if (PlayerCharacter)
 			{
@@ -87,18 +91,24 @@ void AResourceBuilding::Tick(float DeltaTime)
 					ANpcController* const Npc = Cast<ANpcController>(FreeNpcs[0]->GetController());
 					if (Npc)
 					{
-						if (GrowProgressionState == GrowMeshes.Num())
+						if (CurrentProductionQuantity > 0)
 						{
+							if (ConsumptionQuantity > 0 && CurrentConsumptionQuantity < ConsumptionQuantity)
+							{
+								Npc->AddTask(ENpcTask::GetBuildingConsumption, this);
+								Npc->AddTask(ENpcTask::PickupItemsFromStorage, PlayerCharacter->OwnedStorageBuilding);
+								Npc->AddTask(ENpcTask::DropItemsToBuilding, this);
+							}
 							Npc->AddTask(ENpcTask::PickupItemsFromBuilding, this);
 							Npc->AddTask(ENpcTask::DropItemsToStorage, PlayerCharacter->OwnedStorageBuilding);
 						}
 						else
 						{
+							Npc->AddTask(ENpcTask::GetBuildingConsumption, this);
 							Npc->AddTask(ENpcTask::PickupItemsFromStorage, PlayerCharacter->OwnedStorageBuilding);
 							Npc->AddTask(ENpcTask::DropItemsToBuilding, this);
 
-							Npc->NeededItemID = ConsumptionID;
-							Npc->NeededItemQuantity = ConsumptionQuantity - CurrentConsumptionQuantity;
+							
 						}
 						IsGrowing = false;
 						GrowProgressionState = GrowMeshes.Num() + 1;
@@ -111,10 +121,12 @@ void AResourceBuilding::Tick(float DeltaTime)
 
 void AResourceBuilding::SendConsumeStateUpdateToClients_Implementation(float Prog)
 {
-	ConsumeProgressionState = CalculateState(Prog, ConsumeMeshes.Num());
+	ConsumeProgressionState = CalculateState(Prog, ConsumeMeshes.Num() + 1) - 1;
+	CurrentConsumptionQuantity = FMath::Min(CalculateState(Prog, ConsumptionQuantity + 1), ConsumptionQuantity);
 	if (ConsumeProgressionState >= 0 && ConsumeProgressionState < ConsumeMeshes.Num() && BuildProgressionState == 5)
 	{
 		ConsumeMesh->SetStaticMesh(ConsumeMeshes[ConsumeProgressionState]);
+		
 	}
 }
 void AResourceBuilding::SendGrowStateUpdateToClients_Implementation(float Prog)

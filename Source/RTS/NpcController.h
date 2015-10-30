@@ -22,6 +22,17 @@ enum class ENpcTask : uint8
 	PickupItemsFromBuilding 	UMETA(DisplayName = "PickupItemsFromBuilding"),
 	DropItemsToBuilding 	UMETA(DisplayName = "DropItemsToBuilding"),
 
+	GetBuildingConsumption 	UMETA(DisplayName = "GetBuildingConsumption"),
+
+
+
+};
+
+UENUM(BlueprintType)
+enum class ENpcTaskPriority : uint8
+{
+	Low 	UMETA(DisplayName = "Low"),
+	Urgent 	UMETA(DisplayName = "Urgent"),
 
 };
 
@@ -61,6 +72,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items)
 		int32 CarriedItemQuantity;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items)
+		int32 MaxCarriedItemQuantity;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items)
 		int32 NeededItemID;
@@ -69,7 +83,7 @@ public:
 
 
 	//Public Targets
-	void AddTask(ENpcTask Task, AActor* TargetActor);
+	void AddTask(ENpcTask Task, AActor* TargetActor, ENpcTaskPriority Priority = ENpcTaskPriority::Low);
 
 
 private:

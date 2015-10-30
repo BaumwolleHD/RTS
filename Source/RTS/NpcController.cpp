@@ -44,6 +44,7 @@ void ANpcController::Tick(float DeltaTime)
 void ANpcController::FindNextTask()
 {
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn()->GetOwner());
+	AResourceBuilding* ResourceBuilding;
 	switch (Tasks[0])
 	{
 	case ENpcTask::Free:
@@ -51,15 +52,17 @@ void ANpcController::FindNextTask()
 
 	case ENpcTask::PickupItemsFromBuilding:
 
-		AResourceBuilding* Building;
-		Building = Cast<AResourceBuilding>(TargetActors[0]);
-		if (Building)
+		
+		ResourceBuilding = Cast<AResourceBuilding>(TargetActors[0]);
+		if (ResourceBuilding)
 		{
-			CarriedItemID = Building->ProductionID;
-			CarriedItemQuantity = Building->ProductionQuantity;
-			Building->GrowProgression = 0.f;
-			Building->GrowProgressionState = 0;
-			Building->SendGrowStateUpdateToClients(0.f);
+			CarriedItemID = ResourceBuilding->ProductionID;
+			CarriedItemQuantity = FMath::Min(ResourceBuilding->CurrentProductionQuantity, MaxCarriedItemQuantity);
+			ResourceBuilding->CurrentProductionQuantity -= CarriedItemQuantity;
+			ResourceBuilding->GrowProgression = 0.f;
+			ResourceBuilding->GrowProgressionState = 0;
+			UE_LOG(LogTemp, Warning, TEXT("dddd %d"), CarriedItemQuantity);
+			
 
 		}
 		break;
@@ -74,18 +77,36 @@ void ANpcController::FindNextTask()
 
 	case ENpcTask::PickupItemsFromStorage:
 		CarriedItemID = NeededItemID;
-		CarriedItemQuantity = FMath::Min(NeededItemQuantity, PlayerCharacter->CheckForQuantity(NeededItemID));
-		if (PlayerCharacter){ PlayerCharacter->ChangeItem(CarriedItemQuantity, CarriedItemID); }
+		CarriedItemQuantity = FMath::Min(FMath::Min(NeededItemQuantity, PlayerCharacter->CheckForQuantity(NeededItemID)), MaxCarriedItemQuantity);
+		NeededItemID = NeededItemQuantity = 0;
+		if (PlayerCharacter){ PlayerCharacter->ChangeItem(-CarriedItemQuantity, CarriedItemID); }
 		break;
 
 
 	case ENpcTask::DropItemsToBuilding:
-		Building = Cast<AResourceBuilding>(TargetActors[0]);
-		if (Building)
+		ResourceBuilding = Cast<AResourceBuilding>(TargetActors[0]);
+		if (ResourceBuilding)
 		{
-			Building->CurrentConsumptionQuantity = FMath::Min(Building->ConsumptionQuantity, Building->CurrentConsumptionQuantity + CarriedItemQuantity);
-			CarriedItemID = CarriedItemQuantity = 0;
-			Building->GrowProgressionState = 0;
+
+			int32 OldConsumption;
+			OldConsumption = ResourceBuilding->CurrentConsumptionQuantity;
+			//ResourceBuilding->CurrentConsumptionQuantity = FMath::Min(ResourceBuilding->ConsumptionQuantity, ResourceBuilding->CurrentConsumptionQuantity + CarriedItemQuantity);
+			
+			
+			if (Role == ROLE_Authority)
+			{
+				ResourceBuilding->SendConsumeStateUpdateToClients(float(FMath::Min(ResourceBuilding->ConsumptionQuantity, ResourceBuilding->CurrentConsumptionQuantity + CarriedItemQuantity)-1) / ResourceBuilding->ConsumptionQuantity);
+			}
+			ResourceBuilding->GrowProgressionState = 0;
+			CarriedItemQuantity -= ResourceBuilding->CurrentConsumptionQuantity - OldConsumption;
+			if (CarriedItemQuantity == 0)
+			{ 
+				CarriedItemID = 0; 
+			}
+			else
+			{
+				AddTask(ENpcTask::DropItemsToStorage, PlayerCharacter->OwnedStorageBuilding, ENpcTaskPriority::Urgent);
+			}
 		}
 		break;
 
@@ -145,6 +166,24 @@ void ANpcController::FindNextTask()
 
 			break;
 
+
+		case ENpcTask::GetBuildingConsumption:
+			ResourceBuilding = Cast<AResourceBuilding>(TargetActors[0]);
+			if (ResourceBuilding)
+			{
+
+				NeededItemID = ResourceBuilding->ConsumptionID;
+				NeededItemQuantity = ResourceBuilding->ConsumptionQuantity - ResourceBuilding->CurrentConsumptionQuantity;
+
+
+				//TargetActor = PlayerCharacter->OwnedStorageBuilding;
+				TargetLocation = GetPawn()->GetActorLocation();
+			}
+
+			break;
+
+
+
 		}
 		
 	}
@@ -185,9 +224,17 @@ void ANpcController::MoveToTarget()
 	}
 }
 
-void ANpcController::AddTask(ENpcTask Task, AActor* TargetActor)
+void ANpcController::AddTask(ENpcTask Task, AActor* TargetActor, ENpcTaskPriority Priority)
 {
-	Tasks.Add(Task);
-	TargetActors.Add(TargetActor);
+	if (Priority == ENpcTaskPriority::Low)
+	{
+		Tasks.Add(Task);
+		TargetActors.Add(TargetActor);
+	}
+	else
+	{
+		Tasks.Insert(Task, 0);
+		TargetActors.Insert(TargetActor, 0);
+	}
 }
 
