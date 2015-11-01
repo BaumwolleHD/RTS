@@ -25,20 +25,21 @@ void ANpcController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-
-	if (IsTargetReached() || Tasks[0] == ENpcTask::Free && Tasks.Num() > 1)
+	if (Role == ROLE_Authority)
 	{
+		if (IsTargetReached() || Tasks[0] == ENpcTask::Free && Tasks.Num() > 1)
+		{
 
 
-		FindNextTask();
+			FindNextTask();
 
-	
+
+		}
+		else
+		{
+			MoveToTarget();
+		}
 	}
-	else
-	{
-		MoveToTarget();
-	}
-
 }
 
 void ANpcController::FindNextTask()
@@ -61,7 +62,6 @@ void ANpcController::FindNextTask()
 			ResourceBuilding->CurrentProductionQuantity -= CarriedItemQuantity;
 			ResourceBuilding->GrowProgression = 0.f;
 			ResourceBuilding->GrowProgressionState = 0;
-			UE_LOG(LogTemp, Warning, TEXT("dddd %d"), CarriedItemQuantity);
 			
 
 		}
@@ -70,7 +70,8 @@ void ANpcController::FindNextTask()
 
 
 	case ENpcTask::DropItemsToStorage:
-		if (PlayerCharacter){ PlayerCharacter->ChangeItem(CarriedItemQuantity, CarriedItemID); }
+		UE_LOG(LogTemp, Warning, TEXT("Kappa0; %s"), *GetPawn()->GetOwner()->GetName());
+		if (PlayerCharacter){ PlayerCharacter->ChangeItem(CarriedItemID, CarriedItemQuantity); 	UE_LOG(LogTemp, Warning, TEXT("Kappa1")); }
 		CarriedItemID = CarriedItemQuantity = 0;
 		//Task = ENpcTask::Free;
 		break;
@@ -79,7 +80,7 @@ void ANpcController::FindNextTask()
 		CarriedItemID = NeededItemID;
 		CarriedItemQuantity = FMath::Min(FMath::Min(NeededItemQuantity, PlayerCharacter->CheckForQuantity(NeededItemID)), MaxCarriedItemQuantity);
 		NeededItemID = NeededItemQuantity = 0;
-		if (PlayerCharacter){ PlayerCharacter->ChangeItem(-CarriedItemQuantity, CarriedItemID); }
+		if (PlayerCharacter){ PlayerCharacter->ChangeItem(CarriedItemID, -CarriedItemQuantity); }
 		break;
 
 
@@ -146,11 +147,7 @@ void ANpcController::FindNextTask()
 			break;
 
 		case ENpcTask::DropItemsToStorage:
-			if (PlayerCharacter && PlayerCharacter->OwnedStorageBuilding)
-			{
-				//TargetActor = PlayerCharacter->OwnedStorageBuilding;
-				TargetLocation = PlayerCharacter->OwnedStorageBuilding->GetActorLocation();
-			}
+			TargetLocation = TargetActors[0]->GetActorLocation();
 			break;
 
 		case ENpcTask::PickupItemsFromBuilding:
@@ -158,12 +155,7 @@ void ANpcController::FindNextTask()
 			break;
 
 		case ENpcTask::PickupItemsFromStorage:
-			if (PlayerCharacter && PlayerCharacter->OwnedStorageBuilding)
-			{
-				//TargetActor = PlayerCharacter->OwnedStorageBuilding;
-				TargetLocation = PlayerCharacter->OwnedStorageBuilding->GetActorLocation();
-			}
-
+			TargetLocation = TargetActors[0]->GetActorLocation();
 			break;
 
 
@@ -213,7 +205,7 @@ void ANpcController::MoveToTarget()
 	APawn* const Pawn = GetPawn();
 	if (Pawn)
 	{
-
+		
 		UNavigationSystem* const NavSys = GetWorld()->GetNavigationSystem();
 		float const Distance = FVector::Dist(TargetLocation, Pawn->GetActorLocation());
 

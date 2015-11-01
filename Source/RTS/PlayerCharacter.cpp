@@ -10,6 +10,9 @@
 #include "NpcCharacter.h"
 #include "NpcController.h"
 #include "BuildingExtension.h"
+#include "Defaultgamemode.h"
+#include "DefaultGamestate.h"
+#include "DefaultPlayerstate.h"
 #include "Engine.h"
 #include "Blueprint/UserWidget.h"
 
@@ -39,6 +42,10 @@ void APlayerCharacter::BeginPlay()
 			CurrentWidget->AddToViewport();
 		}
 	}
+
+	CurrentGamestate = Cast<ADefaultGamestate>(UGameplayStatics::GetGameState(this));
+	CurrentPlayerstate = Cast<ADefaultPlayerstate>(PlayerState);
+	//UE_LOG(LogTemp, Warning, TEXT("Spawn: %s"), *UGameplayStatics::GetPlayerPawn(this, 0)->GetName());
 
 }
 
@@ -75,8 +82,8 @@ void APlayerCharacter::OnLeftClick()
 {
 	if (Mode == "Build" || Mode == "BuildExtension" && Role < ROLE_Authority)
 	{
-		PlaceBuilding(MouseHitResult, this);
-		UE_LOG(LogTemp, Warning, TEXT("hahaha %s"), *this -> GetName());
+
+		PlaceBuilding(MouseHitResult, SelectedBuilding);
 	}
 	else
 	{
@@ -97,31 +104,34 @@ void APlayerCharacter::SelectActor()
 	}
 }
 
-void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, AActor* PossesedCharacter)
+bool APlayerCharacter::PlaceBuilding_Validate(FHitResult HitResult, TSubclassOf<ABuilding> Building) { return true; } //Anti-Cheat
+
+void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, TSubclassOf<ABuilding> Building)
 {
 	if (HitResult.bBlockingHit == true)
 	{
 		UWorld* World = GetWorld();
-		APlayerCharacter* PossesedPlayerCharacter = Cast<APlayerCharacter>(PossesedCharacter);
+		//APlayerCharacter* PossesedPlayerCharacter = Cast<APlayerCharacter>(Cast<ADefaultGamemode>(UGameplayStatics::GetGameMode(this))->PlayerList[UserIndex]);
 		if (World)
 		{
 
-			ABuilding* const TestBuilding = SelectedBuilding.GetDefaultObject();
+			ABuilding* const TestBuilding = Building.GetDefaultObject();
 			FVector2D Grid2DPosition = ApplyGrid(FVector2D(HitResult.ImpactPoint.X, HitResult.ImpactPoint.Y), TestBuilding->Size);
-			if (CanPlaceBuilding(Grid2DPosition, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(Grid2DPosition, PossesedPlayerCharacter->SelectedActor)))
+			if (CanPlaceBuilding(Grid2DPosition, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(Grid2DPosition, SelectedActor)))
 			{
 				FActorSpawnParameters SpawnParameters;
-				SpawnParameters.Owner = PossesedCharacter;
+				SpawnParameters.Owner = this;
 				SpawnParameters.Instigator = Instigator;
-				UE_LOG(LogTemp, Warning, TEXT("%s from %s by %s"), *PossesedPlayerCharacter->SelectedBuilding->GetName(), *PossesedPlayerCharacter->GetName(), *GetName());
-			//	UE_LOG(LogTemp, Warning, TEXT("SpawnOwner: %s"), *PlayerCharacter->GetName());
-				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(PossesedPlayerCharacter->SelectedBuilding, FVector(Grid2DPosition.X * 100, Grid2DPosition.Y * 100, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
-				UpdateBlockToServer(Grid2DPosition, SpawnedBuilding->Size, FString::FromInt(SpawnedBuilding->ID));
+				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(Building, FVector(Grid2DPosition.X * 100, Grid2DPosition.Y * 100, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
+
+				CurrentPlayerstate->OwnedBuildings.Add(SpawnedBuilding);
+
+				UpdateBlocks(Grid2DPosition, TestBuilding->Size, FString::FromInt(TestBuilding->ID));
 
 
-				if (PossesedPlayerCharacter->Mode == "BuildExtension")
+				if (this->Mode == "BuildExtension")
 				{
-					ABuilding* const Building = Cast<ABuilding>(PossesedPlayerCharacter->SelectedActor);
+					ABuilding* const Building = Cast<ABuilding>(SelectedActor);
 					ABuildingExtension* const BuildingExtension = Cast<ABuildingExtension>(SpawnedBuilding);
 					if (Building && BuildingExtension)
 					{
@@ -141,7 +151,7 @@ bool APlayerCharacter::CanPlaceBuilding(FVector2D Position, FVector2D Size)
 	{
 		for (int32 Y = -Size.Y / 2 + Position.Y - Offset.Y - (0.5f - Offset.Y); Y <= Size.Y / 2 + Position.Y - Offset.Y - 3 * (0.5f - Offset.Y) - 2 * Offset.Y; Y++)
 		{
-			if (PP_BlockID.Contains(SerializeFVector2D(FVector2D(X, Y))))
+			if (CurrentGamestate->PP_BlockID.Contains(SerializeFVector2D(FVector2D(X, Y))))
 			{
 				return false;
 			}
@@ -175,60 +185,50 @@ FVector2D APlayerCharacter::ApplyGrid(FVector2D Location, FVector2D Size)
 	return Location;
 }
 
-bool APlayerCharacter::PlaceBuilding_Validate(FHitResult HitResult, AActor* PossesedCharacter) { return true; } //Anti-Cheat
 
-//bool APlayerCharacter::UpdateBlockToClients_Validate(const FString& Position, int32 ID) { return true; } //Anti-Cheat
 
-void APlayerCharacter::UpdateBlockToServer_Implementation(FVector2D Position, FVector2D Size, const FString& ID)
-{
-	if (Role == ROLE_Authority)
-	{
-		APlayerCharacter::UpdateBlockToClients(Position, Size, ID);
-	}
-}
 
-bool APlayerCharacter::UpdateBlockToServer_Validate(FVector2D Position, FVector2D Size, const FString& ID) { return true; } //Anti-Cheat
-
-void APlayerCharacter::UpdateBlockToClients_Implementation(FVector2D Position, FVector2D Size, FString ID)
+void APlayerCharacter::UpdateBlocks_Implementation(FVector2D Position, FVector2D Size, const FString& ID)
 {
 	FString SerializedPosition = "";
-	FString CenterSerializedPosition = SerializeFVector2D(Position);
-
-	if (PP_BlockID.Contains(CenterSerializedPosition))
-	{
-		PP_BlockID[CenterSerializedPosition] = ID;
-	}
-	else
-	{
-		PP_BlockID.Add(CenterSerializedPosition, ID);
-	}
-
-	FVector2D Offset = FVector2D(FMath::Abs(0.5f * int(!(int(Size.X) % 2))), FMath::Abs(0.5f * int(!(int(Size.Y) % 2))));
-	for (int32 X = -Size.X / 2 + Position.X - Offset.X - (0.5f - Offset.X); X <= Size.X / 2 + Position.X - Offset.X - 3*(0.5f - Offset.X) - 2 * Offset.X; X++)
-	{
-		for (int32 Y = -Size.Y / 2 + Position.Y - Offset.Y - (0.5f - Offset.Y); Y <= Size.Y / 2 + Position.Y - Offset.Y - 3*(0.5f - Offset.Y) - 2 * Offset.Y; Y++)
+		FString CenterSerializedPosition = SerializeFVector2D(Position);
+	
+		if (CurrentGamestate->PP_BlockID.Contains(CenterSerializedPosition))
 		{
-
-			if (FVector2D(X, Y) != Position)
+			CurrentGamestate->PP_BlockID[CenterSerializedPosition] = ID;
+		}
+		else
+		{
+			CurrentGamestate->PP_BlockID.Add(CenterSerializedPosition, ID);
+		}
+	
+		FVector2D Offset = FVector2D(FMath::Abs(0.5f * int(!(int(Size.X) % 2))), FMath::Abs(0.5f * int(!(int(Size.Y) % 2))));
+		for (int32 X = -Size.X / 2 + Position.X - Offset.X - (0.5f - Offset.X); X <= Size.X / 2 + Position.X - Offset.X - 3*(0.5f - Offset.X) - 2 * Offset.X; X++)
+		{
+			for (int32 Y = -Size.Y / 2 + Position.Y - Offset.Y - (0.5f - Offset.Y); Y <= Size.Y / 2 + Position.Y - Offset.Y - 3*(0.5f - Offset.Y) - 2 * Offset.Y; Y++)
 			{
-				SerializedPosition = SerializeFVector2D(FVector2D(X, Y));
-				//UE_LOG(LogTemp, Warning, TEXT("%s, Offset: %f|%f, Min: %f|%f, Max: %f|%f"), *SerializedPosition, Offset.X, Offset.Y, -Size.X / 2 + Position.X - Offset.X + (0.5f - Offset.X), -Size.Y / 2 + Position.Y - Offset.Y, Size.X / 2 + Position.X - Offset.X - (0.5f - Offset.X), Size.Y / 2 + Position.Y - Offset.Y -  (0.5f - Offset.Y) - 2 * Offset.Y);
-				if (PP_BlockID.Contains(SerializedPosition))
+	
+				if (FVector2D(X, Y) != Position)
 				{
-					PP_BlockID[SerializedPosition] = CenterSerializedPosition;
+					SerializedPosition = SerializeFVector2D(FVector2D(X, Y));
+					//UE_LOG(LogTemp, Warning, TEXT("%s, Offset: %f|%f, Min: %f|%f, Max: %f|%f"), *SerializedPosition, Offset.X, Offset.Y, -Size.X / 2 + Position.X - Offset.X + (0.5f - Offset.X), -Size.Y / 2 + Position.Y - Offset.Y, Size.X / 2 + Position.X - Offset.X - (0.5f - Offset.X), Size.Y / 2 + Position.Y - Offset.Y -  (0.5f - Offset.Y) - 2 * Offset.Y);
+					if (CurrentGamestate->PP_BlockID.Contains(SerializedPosition))
+					{
+						CurrentGamestate->PP_BlockID[SerializedPosition] = CenterSerializedPosition;
+					}
+					else
+					{
+						CurrentGamestate->PP_BlockID.Add(SerializedPosition, CenterSerializedPosition);
+					}
 				}
-				else
-				{
-					PP_BlockID.Add(SerializedPosition, CenterSerializedPosition);
-				}
+	
+	
+	
 			}
-
-
-
+	
+	
 		}
 
-
-	}
 }
 
 FString APlayerCharacter::SerializeFVector2D(FVector2D Vec2D)
@@ -286,53 +286,40 @@ float APlayerCharacter::ScaleToViewportFloat(float in, float factor)
 
 void APlayerCharacter::BuildingPreview()
 {
-	if (MouseHitResult.bBlockingHit)
+	if (MouseHitResult.bBlockingHit && CurrentPlayerstate)
 	{
 		ABuilding* const TestBuilding = SelectedBuilding.GetDefaultObject();
+		
 		FVector2D GridLocation = ApplyGrid(FVector2D(MouseHitResult.ImpactPoint.X, MouseHitResult.ImpactPoint.Y), TestBuilding->Size);
 		const FString PassedString = FString::FromInt(GridLocation.X) + "|" + FString::FromInt(GridLocation.Y);
-		ABuildingPreview* const CurrentPreviewBuilding = Cast<ABuildingPreview>(CurrentPreview);
-		if (CurrentPreviewBuilding)
+		//ADefaultGamestate* const Gamestate = Cast<ADefaultGamestate>(UGameplayStatics::GetGameState(this));
+		if (CurrentGamestate && CurrentGamestate->CurrentPreview != nullptr && IsRelevant)
 		{
-			CurrentPreviewBuilding->SetActorLocation(FVector(GridLocation.X * 100, GridLocation.Y * 100, MouseHitResult.ImpactPoint.Z));
-		
-			if (CurrentPreviewBuilding->Mesh->StaticMesh != TestBuilding->BuildMeshes[4])
+			ABuildingPreview* const CurrentPreviewBuilding = Cast<ABuildingPreview>(CurrentGamestate->CurrentPreview);
+			if (CurrentPreviewBuilding)
 			{
 				
-				CurrentPreviewBuilding->Mesh->SetStaticMesh(TestBuilding->BuildMeshes[4]);
-				CurrentPreviewBuilding->Mesh->SetMaterial(0, TestBuilding->BuildMeshes[4]->GetMaterial(0));
-				CurrentPreviewBuilding->Material = CurrentPreviewBuilding->Mesh->CreateAndSetMaterialInstanceDynamic(0);
-				float Scaling = TestBuilding->Size.X*0.1;
-				CurrentPreview->SetActorScale3D(FVector(Scaling, Scaling, Scaling));
-			}
+				CurrentPreviewBuilding->SetActorLocation(FVector(GridLocation.X * 100, GridLocation.Y * 100, MouseHitResult.ImpactPoint.Z));
 
-			if (CanPlaceBuilding(GridLocation, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(GridLocation, SelectedActor)))
-			{
-				CurrentPreviewBuilding->Material->SetVectorParameterValue(FName("PreviewColor"), FLinearColor(0, 0.8f, 0));
-			}
-			else
-			{
-				CurrentPreviewBuilding->Material->SetVectorParameterValue(FName("PreviewColor"), FLinearColor(1, 0, 0));
-			}
-		}
-		else if (CanPlaceBuilding(GridLocation, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(GridLocation, SelectedActor)))
-		{
-			UWorld* World = UGameplayStatics::GetPlayerController(this, 0)->GetWorld();
-			if (World)
-			{
-				FActorSpawnParameters SpawnParameters;
-				SpawnParameters.Owner = this;
-				SpawnParameters.Instigator = Instigator;
-				CurrentPreview = World->SpawnActor<ABuildingPreview>(BuildingPreviewObject, FVector(GridLocation.X * 100, GridLocation.Y * 100, MouseHitResult.ImpactPoint.Z), FRotator(0.f, 0.f, 0.f), SpawnParameters);
-				ABuildingPreview* const CurrentPreviewBuilding = Cast<ABuildingPreview>(CurrentPreview);
-				CurrentPreviewBuilding->Mesh->SetStaticMesh(TestBuilding->BuildMeshes[4]);
-				CurrentPreviewBuilding->Material = CurrentPreviewBuilding->Mesh->CreateAndSetMaterialInstanceDynamic(0);
-				float Scaling = TestBuilding->Size.X*0.1;
-				CurrentPreview->SetActorScale3D(FVector(Scaling, Scaling, Scaling));
-			}
-			else
-			{
-				CurrentPreview->Destroy();
+				if (CurrentPreviewBuilding->Mesh->StaticMesh != TestBuilding->BuildMeshes[4])
+				{
+
+					CurrentPreviewBuilding->Mesh->SetStaticMesh(TestBuilding->BuildMeshes[4]);
+					CurrentPreviewBuilding->Mesh->SetMaterial(0, TestBuilding->BuildMeshes[4]->GetMaterial(0));
+					CurrentPreviewBuilding->Material = CurrentPreviewBuilding->Mesh->CreateAndSetMaterialInstanceDynamic(0);
+					float Scaling = TestBuilding->Size.X*0.1;
+					CurrentPreviewBuilding->Mesh->SetRelativeScale3D(FVector(Scaling, Scaling, Scaling));
+					//UE_LOG(LogTemp, Warning, TEXT("Self: %s, Building: %s"), *GetName(), *CurrentPlayerstate->SelectedBuilding->GetName());
+				}
+
+				if (CanPlaceBuilding(GridLocation, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(GridLocation, SelectedActor)))
+				{
+					CurrentPreviewBuilding->Material->SetVectorParameterValue(FName("PreviewColor"), FLinearColor(0, 0.8f, 0));
+				}
+				else
+				{
+					CurrentPreviewBuilding->Material->SetVectorParameterValue(FName("PreviewColor"), FLinearColor(1, 0, 0));
+				}
 			}
 		}
 	}
@@ -359,9 +346,9 @@ TArray<APawn*> APlayerCharacter::GetNpcsByState(TArray<APawn*> NpcArray, ENpcJob
 int32 APlayerCharacter::CheckForQuantity(int32 ID)
 {
 	int32 Quantity = 0;
-	for (int32 BlockIndex = 0; BlockIndex < OwnedStorageBlocks.Num(); BlockIndex++)
+	for (int32 BlockIndex = 0; BlockIndex < CurrentPlayerstate->OwnedStorageBlocks.Num(); BlockIndex++)
 	{
-		AStorageBlock* const Block = Cast<AStorageBlock>(OwnedStorageBlocks[BlockIndex]);
+		AStorageBlock* const Block = Cast<AStorageBlock>(CurrentPlayerstate->OwnedStorageBlocks[BlockIndex]);
 		if (Block && Block->BuildProgressionState == 5)
 		{
 			for (int32 StackIndex = 0; StackIndex < Block->StorageStacks.Num(); StackIndex++)
@@ -381,11 +368,15 @@ int32 APlayerCharacter::CheckForQuantity(int32 ID)
 
 }
 
-bool APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
+bool APlayerCharacter::ChangeItem_Validate(int32 ID, int32 Quantity) { return true; } //Anti-Cheat
+
+void APlayerCharacter::ChangeItem_Implementation(int32 ID, int32 Quantity)
 {
-	for (int32 BlockIndex = 0; BlockIndex < OwnedStorageBlocks.Num(); BlockIndex++)
+	UE_LOG(LogTemp, Warning, TEXT("owned Blocks: %d"), CurrentPlayerstate->OwnedStorageBlocks.Num());
+
+	for (int32 BlockIndex = 0; BlockIndex < CurrentPlayerstate->OwnedStorageBlocks.Num(); BlockIndex++)
 	{
-		AStorageBlock* const Block = Cast<AStorageBlock>(OwnedStorageBlocks[BlockIndex]);
+		AStorageBlock* const Block = Cast<AStorageBlock>(CurrentPlayerstate->OwnedStorageBlocks[BlockIndex]);
 		if (Block && Block->BuildProgressionState == 5)
 		{
 			for (int32 StackIndex = 0; StackIndex < Block->StorageStacks.Num(); StackIndex++)
@@ -400,7 +391,7 @@ bool APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 							Stack->Quantity += Quantity;
 							Stack->Sort();
 							Quantity = 0;
-							return true;
+							return;
 						}
 						else if (Quantity + Stack->Quantity == Stack->MaxQuantity)
 						{
@@ -424,13 +415,13 @@ bool APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 	}
 	if (Quantity == 0)
 	{
-		return true;
+		return;
 	}
 	if (Quantity > 0)
 	{
-		for (int32 BlockIndex = 0; BlockIndex < OwnedStorageBlocks.Num(); BlockIndex++)
+		for (int32 BlockIndex = 0; BlockIndex < CurrentPlayerstate->OwnedStorageBlocks.Num(); BlockIndex++)
 		{
-			AStorageBlock* const Block = Cast<AStorageBlock>(OwnedStorageBlocks[BlockIndex]);
+			AStorageBlock* const Block = Cast<AStorageBlock>(CurrentPlayerstate->OwnedStorageBlocks[BlockIndex]);
 			if (Block && Block->BuildProgressionState == 5)
 			{
 				for (int32 StackIndex = 0; StackIndex < Block->StorageStacks.Num(); StackIndex++)
@@ -460,7 +451,7 @@ bool APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 									Stack->Quantity = Quantity;
 									Stack->Sort();
 									Quantity = 0;
-									return true;
+									return;
 								}
 								else
 								{
@@ -475,7 +466,7 @@ bool APlayerCharacter::ChangeItem(int32 Quantity, int32 ID)
 			}
 		}
 	}
-	return false;
+	return;
 }
 
 void APlayerCharacter::SetModeToBuildExtend()

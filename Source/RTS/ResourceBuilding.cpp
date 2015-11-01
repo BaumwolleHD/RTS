@@ -85,7 +85,7 @@ void AResourceBuilding::Tick(float DeltaTime)
 		{
 			if (PlayerCharacter)
 			{
-				TArray<APawn*> FreeNpcs = PlayerCharacter->GetNpcsByState(PlayerCharacter->StorageNpcs, ENpcJob::StorageWorker, ENpcTask::Free);
+				TArray<APawn*> FreeNpcs = PlayerCharacter->CurrentPlayerstate->GetNpcsByState(PlayerCharacter->CurrentPlayerstate->OwnedNpcs, ENpcJob::StorageWorker, ENpcTask::Free);
 				if (FreeNpcs.Num() > 0)
 				{
 					ANpcController* const Npc = Cast<ANpcController>(FreeNpcs[0]->GetController());
@@ -96,16 +96,16 @@ void AResourceBuilding::Tick(float DeltaTime)
 							if (ConsumptionQuantity > 0 && CurrentConsumptionQuantity < ConsumptionQuantity)
 							{
 								Npc->AddTask(ENpcTask::GetBuildingConsumption, this);
-								Npc->AddTask(ENpcTask::PickupItemsFromStorage, PlayerCharacter->OwnedStorageBuilding);
+								Npc->AddTask(ENpcTask::PickupItemsFromStorage, PlayerCharacter->CurrentPlayerstate->OwnedStorageBuilding);
 								Npc->AddTask(ENpcTask::DropItemsToBuilding, this);
 							}
 							Npc->AddTask(ENpcTask::PickupItemsFromBuilding, this);
-							Npc->AddTask(ENpcTask::DropItemsToStorage, PlayerCharacter->OwnedStorageBuilding);
+							Npc->AddTask(ENpcTask::DropItemsToStorage, PlayerCharacter->CurrentPlayerstate->OwnedStorageBuilding);
 						}
 						else
 						{
 							Npc->AddTask(ENpcTask::GetBuildingConsumption, this);
-							Npc->AddTask(ENpcTask::PickupItemsFromStorage, PlayerCharacter->OwnedStorageBuilding);
+							Npc->AddTask(ENpcTask::PickupItemsFromStorage, PlayerCharacter->CurrentPlayerstate->OwnedStorageBuilding);
 							Npc->AddTask(ENpcTask::DropItemsToBuilding, this);
 
 							

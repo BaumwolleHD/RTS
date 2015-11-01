@@ -3,6 +3,9 @@
 #pragma once
 
 #include "GameFramework/GameMode.h"
+#include "NpcCharacter.h"
+#include "NpcController.h"
+#include "DefaultGamestate.h"
 #include "DefaultGamemode.generated.h"
 
 /**
@@ -20,8 +23,27 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaSeconds) override;
+
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Npcs)
+		bool bSpawnBeggers;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Npcs)
+		int32 SpawnRate;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Npcs)
+		float SpawnTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Npcs)
+		TSubclassOf<class ANpcCharacter> NpcClass;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gamemode)
+		ADefaultGamestate* CurrentGamestate;
+
+
 protected:
+	void NpcInfluxHandler(float DeltaTime);
 
 	
 };
