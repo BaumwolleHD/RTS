@@ -264,10 +264,12 @@
     <ClCompile Include="..\..\Source\RTS\DefaultGamemode.cpp" />
     <ClInclude Include="..\..\Source\RTS\DefaultGamemode.h" />
     <ClCompile Include="..\..\Source\RTS\DefaultGamestate.cpp" />
-    <ClCompile Include="..\..\Source\RTS\DefaultPlayerstate.cpp" />
-    <ClCompile Include="..\..\Source\RTS\MenuHud.cpp" />
     <ClInclude Include="..\..\Source\RTS\DefaultGamestate.h" />
+    <ClCompile Include="..\..\Source\RTS\DefaultPlayerstate.cpp" />
     <ClInclude Include="..\..\Source\RTS\DefaultPlayerstate.h" />
+    <ClCompile Include="..\..\Source\RTS\DefaultWidget.cpp" />
+    <ClCompile Include="..\..\Source\RTS\MenuHud.cpp" />
+    <ClInclude Include="..\..\Source\RTS\DefaultWidget.h" />
     <ClInclude Include="..\..\Source\RTS\MenuHud.h" />
     <ClCompile Include="..\..\Source\RTS\NpcCharacter.cpp" />
     <ClInclude Include="..\..\Source\RTS\NpcCharacter.h" />

@@ -49,6 +49,10 @@ public:
 		int32 CurrentConsumptionQuantity;
 
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Npcs)
+		bool CalledNpc;
+
 	int32 GrowProgressionState;
 
 	int32 ConsumeProgressionState;

@@ -62,6 +62,7 @@ void ANpcController::FindNextTask()
 			ResourceBuilding->CurrentProductionQuantity -= CarriedItemQuantity;
 			ResourceBuilding->GrowProgression = 0.f;
 			ResourceBuilding->GrowProgressionState = 0;
+			ResourceBuilding->CalledNpc = false;
 			
 
 		}
@@ -70,8 +71,7 @@ void ANpcController::FindNextTask()
 
 
 	case ENpcTask::DropItemsToStorage:
-		UE_LOG(LogTemp, Warning, TEXT("Kappa0; %s"), *GetPawn()->GetOwner()->GetName());
-		if (PlayerCharacter){ PlayerCharacter->ChangeItem(CarriedItemID, CarriedItemQuantity); 	UE_LOG(LogTemp, Warning, TEXT("Kappa1")); }
+		if (PlayerCharacter){ PlayerCharacter->ChangeItem(CarriedItemID, CarriedItemQuantity); }
 		CarriedItemID = CarriedItemQuantity = 0;
 		//Task = ENpcTask::Free;
 		break;
@@ -99,6 +99,7 @@ void ANpcController::FindNextTask()
 				ResourceBuilding->SendConsumeStateUpdateToClients(float(FMath::Min(ResourceBuilding->ConsumptionQuantity, ResourceBuilding->CurrentConsumptionQuantity + CarriedItemQuantity)-1) / ResourceBuilding->ConsumptionQuantity);
 			}
 			ResourceBuilding->GrowProgressionState = 0;
+			ResourceBuilding->CalledNpc = false;
 			CarriedItemQuantity -= ResourceBuilding->CurrentConsumptionQuantity - OldConsumption;
 			if (CarriedItemQuantity == 0)
 			{ 

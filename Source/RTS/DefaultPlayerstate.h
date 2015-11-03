@@ -35,6 +35,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = NPCs)
 		TArray<APawn*> OwnedNpcs;
 
+	//Items
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = Items)
+		TArray<int32> OwnedItems;
+
 
 
 	//Npc Networking

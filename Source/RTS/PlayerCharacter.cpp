@@ -14,6 +14,7 @@
 #include "DefaultGamestate.h"
 #include "DefaultPlayerstate.h"
 #include "Engine.h"
+#include "DefaultWidget.h"
 #include "Blueprint/UserWidget.h"
 
 
@@ -343,6 +344,41 @@ TArray<APawn*> APlayerCharacter::GetNpcsByState(TArray<APawn*> NpcArray, ENpcJob
 	return ReturnedActors;
 }
 
+
+void APlayerCharacter::UpdateQuantity()
+{
+	int32 ItemIndex = 0;
+
+
+	for (ItemIndex; ItemIndex < CurrentPlayerstate->OwnedItems.Num(); ItemIndex++)
+	{
+		CurrentPlayerstate->OwnedItems[ItemIndex] = 0;
+	}
+
+	for (int32 BlockIndex = 0; BlockIndex < CurrentPlayerstate->OwnedStorageBlocks.Num(); BlockIndex++)
+	{
+		AStorageBlock* const Block = Cast<AStorageBlock>(CurrentPlayerstate->OwnedStorageBlocks[BlockIndex]);
+		if (Block && Block->BuildProgressionState == 5)
+		{
+			for (int32 StackIndex = 0; StackIndex < Block->StorageStacks.Num(); StackIndex++)
+			{
+				AStorageStack* const Stack = Cast<AStorageStack>(Block->StorageStacks[StackIndex]);
+				if (Stack)
+				{
+					ItemClasses.Find(Stack->GetClass(), ItemIndex);
+					CurrentPlayerstate->OwnedItems[ItemIndex] += Stack->Quantity;
+				}
+			}
+		}
+	}
+	UDefaultWidget* Widget = Cast<UDefaultWidget>(CurrentWidget);
+	if (Widget)
+	{
+		Widget->UpdateItems(CurrentPlayerstate->OwnedItems);
+
+	}
+}
+
 int32 APlayerCharacter::CheckForQuantity(int32 ID)
 {
 	int32 Quantity = 0;
@@ -391,6 +427,7 @@ void APlayerCharacter::ChangeItem_Implementation(int32 ID, int32 Quantity)
 							Stack->Quantity += Quantity;
 							Stack->Sort();
 							Quantity = 0;
+							UpdateQuantity();
 							return;
 						}
 						else if (Quantity + Stack->Quantity == Stack->MaxQuantity)
@@ -415,6 +452,7 @@ void APlayerCharacter::ChangeItem_Implementation(int32 ID, int32 Quantity)
 	}
 	if (Quantity == 0)
 	{
+		UpdateQuantity();
 		return;
 	}
 	if (Quantity > 0)
@@ -451,6 +489,7 @@ void APlayerCharacter::ChangeItem_Implementation(int32 ID, int32 Quantity)
 									Stack->Quantity = Quantity;
 									Stack->Sort();
 									Quantity = 0;
+									UpdateQuantity();
 									return;
 								}
 								else
@@ -466,7 +505,7 @@ void APlayerCharacter::ChangeItem_Implementation(int32 ID, int32 Quantity)
 			}
 		}
 	}
-	return;
+	UpdateQuantity();
 }
 
 void APlayerCharacter::SetModeToBuildExtend()

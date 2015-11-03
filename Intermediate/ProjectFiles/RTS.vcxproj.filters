@@ -3,7 +3,7 @@
   <ItemGroup>
     <None Include="..\..\RTS.uproject" />
     <Filter Include="Source">
-      <UniqueIdentifier>{BEA273BF-7329-492D-BF61-B76476234B24}</UniqueIdentifier>
+      <UniqueIdentifier>{E2F7A56C-3C1C-487E-9A2C-6F96F05C753F}</UniqueIdentifier>
     </Filter>
     <None Include="..\..\Source\RTS.Target.cs">
       <Filter>Source</Filter>
@@ -12,7 +12,7 @@
       <Filter>Source</Filter>
     </None>
     <Filter Include="Config">
-      <UniqueIdentifier>{0C7FC04D-F1BD-46E2-B5AB-C6A8FBF01980}</UniqueIdentifier>
+      <UniqueIdentifier>{CE85D273-7363-4FA5-A89A-92BAFB311F23}</UniqueIdentifier>
     </Filter>
     <None Include="..\..\Config\DefaultEngine.ini">
       <Filter>Config</Filter>
@@ -21,7 +21,7 @@
       <Filter>Config</Filter>
     </None>
     <Filter Include="Source\RTS">
-      <UniqueIdentifier>{42CA7E03-9AED-4F3C-AC9A-B0B20F53249D}</UniqueIdentifier>
+      <UniqueIdentifier>{AC24A621-5B70-497A-A861-74DC0C1F6994}</UniqueIdentifier>
     </Filter>
     <ClCompile Include="..\..\Source\RTS\Building.cpp">
       <Filter>Source\RTS</Filter>
@@ -45,6 +45,18 @@
       <Filter>Source\RTS</Filter>
     </ClCompile>
     <ClInclude Include="..\..\Source\RTS\DefaultGamemode.h">
+      <Filter>Source\RTS</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\RTS\DefaultGamestate.cpp">
+      <Filter>Source\RTS</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\RTS\DefaultGamestate.h">
+      <Filter>Source\RTS</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\RTS\DefaultPlayerstate.cpp">
+      <Filter>Source\RTS</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\RTS\DefaultPlayerstate.h">
       <Filter>Source\RTS</Filter>
     </ClInclude>
     <ClCompile Include="..\..\Source\RTS\MenuHud.cpp">
@@ -118,18 +130,12 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\RTS\DefaultGamestate.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\RTS\DefaultPlayerstate.h">
+    <ClInclude Include="..\..\Source\RTS\DefaultWidget.h">
       <Filter>Source\RTS</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\RTS\DefaultGamestate.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\RTS\DefaultPlayerstate.cpp">
+    <ClCompile Include="..\..\Source\RTS\DefaultWidget.cpp">
       <Filter>Source\RTS</Filter>
     </ClCompile>
   </ItemGroup>

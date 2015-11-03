@@ -33,6 +33,7 @@ void ADefaultGamemode::NpcInfluxHandler(float DeltaTime)
 	
 	if (SpawnTimer <= 0)
 	{
+		Spawncount++;
 		UWorld* World = GetWorld();
 		if (World)
 		{
@@ -44,7 +45,8 @@ void ADefaultGamemode::NpcInfluxHandler(float DeltaTime)
 				SpawnParameters.Instigator = Instigator;
 				ANpcCharacter* const SpawnedNpc = World->SpawnActor<ANpcCharacter>(NpcClass, FVector(1000.f,0.f,100.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
 				Cast<ADefaultPlayerstate>(CurrentGamestate->PlayerStateList[UserIndex])->OwnedNpcs.Add(SpawnedNpc);
-				Cast<ANpcController>(SpawnedNpc->GetController())->Job = ENpcJob::StorageWorker;
+				//Cast<ANpcController>(SpawnedNpc->GetController())->Job = ENpcJob::StorageWorker;
+				
 
 			}
 		}

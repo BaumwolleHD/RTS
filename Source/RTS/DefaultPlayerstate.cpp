@@ -34,6 +34,10 @@ void ADefaultPlayerstate::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >
 	// Replicate to everyone
 	DOREPLIFETIME(ADefaultPlayerstate, CurrentUserIndex);
 	DOREPLIFETIME(ADefaultPlayerstate, OwnedBuildings);
+	DOREPLIFETIME(ADefaultPlayerstate, OwnedItems);
+	DOREPLIFETIME(ADefaultPlayerstate, OwnedNpcs);
+
+
 
 }
 

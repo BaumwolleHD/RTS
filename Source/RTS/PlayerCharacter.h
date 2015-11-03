@@ -139,6 +139,8 @@ public:
 	void ChangeItem_Implementation(int32 ID, int32 Quantity);
 	bool ChangeItem_Validate(int32 ID, int32 Quantity);
 
+	void UpdateQuantity();
+
 
 
 	int32 CheckForQuantity(int32 ID);

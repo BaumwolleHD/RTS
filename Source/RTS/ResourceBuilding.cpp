@@ -79,9 +79,9 @@ void AResourceBuilding::Tick(float DeltaTime)
 		else if (GrowProgressionState == 0 && CurrentProductionQuantity == 0 && (ConsumptionQuantity == 0 || CurrentConsumptionQuantity == ConsumptionQuantity ))
 		{
 			IsGrowing = true;
-			if (Role == ROLE_Authority) { SendGrowStateUpdateToClients(0.f); }
+			SendGrowStateUpdateToClients(0.f);
 		}
-		else if (GrowProgressionState != GrowMeshes.Num() + 1 && (GrowProgressionState == GrowMeshes.Num() || GrowProgressionState == 0 && CurrentConsumptionQuantity < ConsumptionQuantity && PlayerCharacter->CheckForQuantity(ConsumptionID) >= ConsumptionQuantity - CurrentConsumptionQuantity) || CurrentProductionQuantity > 0)
+		else if (!CalledNpc && (GrowProgressionState == GrowMeshes.Num() || GrowProgressionState == 0 && CurrentConsumptionQuantity < ConsumptionQuantity && PlayerCharacter->CheckForQuantity(ConsumptionID) >= ConsumptionQuantity - CurrentConsumptionQuantity || CurrentProductionQuantity > 0))
 		{
 			if (PlayerCharacter)
 			{
@@ -111,7 +111,8 @@ void AResourceBuilding::Tick(float DeltaTime)
 							
 						}
 						IsGrowing = false;
-						GrowProgressionState = GrowMeshes.Num() + 1;
+						CalledNpc = true;
+						UE_LOG(LogTemp, Warning, TEXT("npc called"));
 					}
 				}
 			}

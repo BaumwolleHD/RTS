@@ -32,6 +32,9 @@ public:
 		int32 SpawnRate;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Npcs)
+		int32 Spawncount;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Npcs)
 		float SpawnTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Npcs)
