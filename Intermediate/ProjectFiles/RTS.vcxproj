@@ -254,6 +254,7 @@
 		<None Include="..\..\RTS.uproject" />
 		<None Include="..\..\Source\RTS.Target.cs" />
 		<None Include="..\..\Source\RTSEditor.Target.cs" />
+		<None Include="..\..\Config\DefaultEditorPerProjectUserSettings.ini" />
 		<None Include="..\..\Config\DefaultEngine.ini" />
 		<None Include="..\..\Config\DefaultInput.ini" />
 		<ClCompile Include="..\..\Source\RTS\Building.cpp" />
@@ -264,6 +265,12 @@
 		<ClInclude Include="..\..\Source\RTS\BuildingPreview.h" />
 		<ClCompile Include="..\..\Source\RTS\DefaultGamemode.cpp" />
 		<ClInclude Include="..\..\Source\RTS\DefaultGamemode.h" />
+		<ClCompile Include="..\..\Source\RTS\DefaultGamestate.cpp" />
+		<ClInclude Include="..\..\Source\RTS\DefaultGamestate.h" />
+		<ClCompile Include="..\..\Source\RTS\DefaultPlayerstate.cpp" />
+		<ClInclude Include="..\..\Source\RTS\DefaultPlayerstate.h" />
+		<ClCompile Include="..\..\Source\RTS\DefaultWidget.cpp" />
+		<ClInclude Include="..\..\Source\RTS\DefaultWidget.h" />
 		<ClCompile Include="..\..\Source\RTS\MenuHud.cpp" />
 		<ClInclude Include="..\..\Source\RTS\MenuHud.h" />
 		<ClCompile Include="..\..\Source\RTS\NpcCharacter.cpp" />

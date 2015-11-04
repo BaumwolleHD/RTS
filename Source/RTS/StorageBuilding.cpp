@@ -8,7 +8,7 @@
 // Sets default values
 AStorageBuilding::AStorageBuilding()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
@@ -19,9 +19,10 @@ void AStorageBuilding::BeginPlay()
 	Super::BeginPlay();
 
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(this->GetOwner());
-	if (PlayerCharacter && Role == ROLE_Authority)
+	if (PlayerCharacter && (Role == ROLE_Authority || PlayerCharacter->IsRelevant))
 	{
-		PlayerCharacter->OwnedStorageBuilding = this;
+		PlayerCharacter->CurrentPlayerstate->OwnedStorageBuilding = this;
+
 	}
 	
 }

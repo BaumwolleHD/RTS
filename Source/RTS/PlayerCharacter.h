@@ -4,6 +4,8 @@
 
 #include "GameFramework/Pawn.h"
 #include "NpcController.h"
+#include "DefaultGamestate.h"
+#include "DefaultPlayerstate.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -41,6 +43,10 @@ public:
 		FVector2D MapSize;
 
 
+	//Id
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Identity)
+		bool IsRelevant;
+
 	//Buildings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BuildMode)
 		TSubclassOf<class ABuilding> SelectedBuilding;
@@ -53,6 +59,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BuildMode)
 		AActor* CurrentPreview;
+
 
 
 	//Items
@@ -82,17 +89,27 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = NPCs)
 		TArray<APawn*> OwnedNpcs;
 
+
+
 	//Npc Arrays
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = NPCs)
 		TArray<APawn*> StorageNpcs;
+
 
 	//Npc Networking
 	TArray<APawn*> GetNpcsByState(TArray<APawn*> NpcArray, ENpcJob Job, ENpcTask Task);
 
 
 	//Synced stuff
-	UPROPERTY()
-		TMap<FString, FString> PP_BlockID;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gamemode)
+		ADefaultGamestate* CurrentGamestate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gamemode)
+		ADefaultPlayerstate* CurrentPlayerstate;
+
+
+	/*UPROPERTY()
+		TMap<FString, FString> PP_BlockID;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
 		bool Paused;
@@ -100,25 +117,32 @@ public:
 
 	//Build Mode
 	UFUNCTION(Reliable, Server, WithValidation) //Runs on Server
-		void PlaceBuilding(FHitResult HitResult, AActor* PossesedCharacter);
-	void PlaceBuilding_Implementation(FHitResult HitResult, AActor* PossesedCharacter);
-	bool PlaceBuilding_Validate(FHitResult HitResult, AActor* PossesedCharacter);
+		void PlaceBuilding(FHitResult HitResult, TSubclassOf<ABuilding> Building);
+	void PlaceBuilding_Implementation(FHitResult HitResult, TSubclassOf<ABuilding> Building);
+	bool PlaceBuilding_Validate(FHitResult HitResult, TSubclassOf<ABuilding> Building);
 
-	UFUNCTION(Reliable, Server, WithValidation) // Sends block update request to server
-		void UpdateBlockToServer(FVector2D Position, FVector2D Size, const FString& ID);
-	void UpdateBlockToServer_Implementation(FVector2D Position, FVector2D Size, const FString& ID);
-	bool UpdateBlockToServer_Validate(FVector2D Position, FVector2D Size, const FString& ID);
 
 	UFUNCTION(Reliable, NetMulticast) // Sends block update to clients
-		void UpdateBlockToClients(FVector2D Position, FVector2D Size, const FString& ID);
-	void UpdateBlockToClients_Implementation(FVector2D Position, FVector2D Size, FString ID);
+	void UpdateBlocks(FVector2D Position, FVector2D Size, const FString& ID);
+	void UpdateBlocks_Implementation(FVector2D Position, FVector2D Size, const FString& ID);
+
+
+	
 
 	void BuildingPreview();
 
 
 
 	//Resorces
-	bool ChangeItem(int32 Quantity, int32 ID);
+	UFUNCTION(Reliable, Server, WithValidation) //Runs on Server
+		void ChangeItem(int32 ID, int32 Quantity);
+	void ChangeItem_Implementation(int32 ID, int32 Quantity);
+	bool ChangeItem_Validate(int32 ID, int32 Quantity);
+
+	void UpdateQuantity();
+
+
+
 	int32 CheckForQuantity(int32 ID);
 
 

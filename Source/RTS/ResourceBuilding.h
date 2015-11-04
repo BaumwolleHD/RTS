@@ -38,6 +38,8 @@ public:
 		int32 ProductionQuantity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Production)
 		int32 ProductionID;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Production)
+		int32 CurrentProductionQuantity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Consumption)
 		int32 ConsumptionQuantity;
@@ -46,6 +48,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Consumption)
 		int32 CurrentConsumptionQuantity;
 
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Npcs)
+		bool CalledNpc;
 
 	int32 GrowProgressionState;
 

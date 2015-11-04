@@ -28,8 +28,8 @@ ABuilding::ABuilding()
 void ABuilding::BeginPlay()
 {
 	Super::BeginPlay();
-	float Scaling = Size.X*0.1;
-	SetActorScale3D(FVector(Scaling, Scaling, Scaling));
+	//float Scaling = Size.X*0.1;
+	//SetActorScale3D(FVector(Scaling, Scaling, Scaling));
 	if (Role == ROLE_Authority) {
 
 		if (BuildProgressionState == 0) {
@@ -87,7 +87,7 @@ bool ABuilding::CheckIfActorHasStaticMesh(AActor* Actor, UStaticMesh* StaticMesh
 
 int32 ABuilding::CalculateState(float Prog, int32 Steps)
 {
-	return FMath::Max(1, FMath::CeilToInt((Prog + 0.01f)*(Steps - 1))); //To beoptimised
+	return FMath::Max(1, FMath::CeilToInt((Prog + 0.01f)*(Steps - 1)));
 }
 
 void ABuilding::SendBuildStateUpdateToClients_Implementation(float Prog)
@@ -100,6 +100,12 @@ void ABuilding::SendBuildStateUpdateToClients_Implementation(float Prog)
 	{ 
 		BaseMesh->SetStaticMesh(BuildMeshes[BuildProgressionState - 1]); 
 		if (BuildProgressionState == 5){ BuildingComplete(); }
+		else if (BuildProgressionState == 1)
+		{
+			float Scaling = Size.X*0.1;
+			SetActorScale3D(FVector(Scaling, Scaling, Scaling));
+		
+		}
 	}
 }
 
