@@ -1,142 +1,142 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ItemGroup>
-    <None Include="..\..\RTS.uproject" />
-    <Filter Include="Source">
-      <UniqueIdentifier>{E2F7A56C-3C1C-487E-9A2C-6F96F05C753F}</UniqueIdentifier>
-    </Filter>
-    <None Include="..\..\Source\RTS.Target.cs">
-      <Filter>Source</Filter>
-    </None>
-    <None Include="..\..\Source\RTSEditor.Target.cs">
-      <Filter>Source</Filter>
-    </None>
-    <Filter Include="Config">
-      <UniqueIdentifier>{CE85D273-7363-4FA5-A89A-92BAFB311F23}</UniqueIdentifier>
-    </Filter>
-    <None Include="..\..\Config\DefaultEngine.ini">
-      <Filter>Config</Filter>
-    </None>
-    <None Include="..\..\Config\DefaultInput.ini">
-      <Filter>Config</Filter>
-    </None>
-    <Filter Include="Source\RTS">
-      <UniqueIdentifier>{AC24A621-5B70-497A-A861-74DC0C1F6994}</UniqueIdentifier>
-    </Filter>
-    <ClCompile Include="..\..\Source\RTS\Building.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\Building.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\BuildingExtension.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\BuildingExtension.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\BuildingPreview.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\BuildingPreview.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\DefaultGamemode.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\DefaultGamemode.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\DefaultGamestate.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\DefaultGamestate.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\DefaultPlayerstate.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\DefaultPlayerstate.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\MenuHud.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\MenuHud.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\NpcCharacter.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\NpcCharacter.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\NpcController.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\NpcController.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\PlayerCharacter.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\PlayerCharacter.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\ResourceBuilding.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\ResourceBuilding.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\ResourceBuildingExtension.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\ResourceBuildingExtension.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <None Include="..\..\Source\RTS\RTS.Build.cs">
-      <Filter>Source\RTS</Filter>
-    </None>
-    <ClCompile Include="..\..\Source\RTS\RTS.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\RTS.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\SavingFile.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\SavingFile.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\StorageBlock.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\StorageBlock.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\StorageBuilding.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\StorageBuilding.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-    <ClCompile Include="..\..\Source\RTS\StorageStack.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-    <ClInclude Include="..\..\Source\RTS\StorageStack.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\Source\RTS\DefaultWidget.h">
-      <Filter>Source\RTS</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\Source\RTS\DefaultWidget.cpp">
-      <Filter>Source\RTS</Filter>
-    </ClCompile>
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\RTS.uproject" />
+		<Filter Include="Source">
+			<UniqueIdentifier>{F37B5E43-9326-4E4C-AEF5-2CA6D2C4819A}</UniqueIdentifier>
+		</Filter>
+		<None Include="..\..\Source\RTS.Target.cs">
+			<Filter>Source</Filter>
+		</None >
+		<None Include="..\..\Source\RTSEditor.Target.cs">
+			<Filter>Source</Filter>
+		</None >
+		<Filter Include="Config">
+			<UniqueIdentifier>{8EDB6270-6A88-460C-AAA9-C315F5035A07}</UniqueIdentifier>
+		</Filter>
+		<None Include="..\..\Config\DefaultEditorPerProjectUserSettings.ini">
+			<Filter>Config</Filter>
+		</None >
+		<None Include="..\..\Config\DefaultEngine.ini">
+			<Filter>Config</Filter>
+		</None >
+		<None Include="..\..\Config\DefaultInput.ini">
+			<Filter>Config</Filter>
+		</None >
+		<Filter Include="Source\RTS">
+			<UniqueIdentifier>{8898C79A-D81E-4FAD-9A9F-61FCF138EEB6}</UniqueIdentifier>
+		</Filter>
+		<ClCompile Include="..\..\Source\RTS\Building.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\Building.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\BuildingExtension.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\BuildingExtension.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\BuildingPreview.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\BuildingPreview.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\DefaultGamemode.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\DefaultGamemode.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\DefaultGamestate.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\DefaultGamestate.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\DefaultPlayerstate.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\DefaultPlayerstate.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\DefaultWidget.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\DefaultWidget.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\MenuHud.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\MenuHud.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\NpcCharacter.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\NpcCharacter.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\NpcController.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\NpcController.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\PlayerCharacter.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\PlayerCharacter.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\ResourceBuilding.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\ResourceBuilding.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\ResourceBuildingExtension.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\ResourceBuildingExtension.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<None Include="..\..\Source\RTS\RTS.Build.cs">
+			<Filter>Source\RTS</Filter>
+		</None >
+		<ClCompile Include="..\..\Source\RTS\RTS.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\RTS.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\SavingFile.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\SavingFile.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\StorageBlock.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\StorageBlock.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\StorageBuilding.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\StorageBuilding.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+		<ClCompile Include="..\..\Source\RTS\StorageStack.cpp">
+			<Filter>Source\RTS</Filter>
+		</ClCompile >
+		<ClInclude Include="..\..\Source\RTS\StorageStack.h">
+			<Filter>Source\RTS</Filter>
+		</ClInclude >
+	</ItemGroup>
 </Project>

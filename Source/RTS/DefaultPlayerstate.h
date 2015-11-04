@@ -17,6 +17,13 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaSeconds) override;
+
+	void NpcHandler();
+
+
+	int32 NpcProgression = 0;
+
 		//Id
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = Identity)
 		int32 CurrentUserIndex;
