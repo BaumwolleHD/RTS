@@ -29,7 +29,7 @@ void ADefaultGamemode::Tick(float DeltaTime)
 
 void ADefaultGamemode::NpcInfluxHandler(float DeltaTime)
 {
-	if (Spawncount < 500)
+	if (Spawncount < 4)
 	{
 		SpawnTimer -= DeltaTime;
 
