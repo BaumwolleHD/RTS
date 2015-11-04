@@ -85,10 +85,10 @@ void AResourceBuilding::Tick(float DeltaTime)
 		{
 			if (PlayerCharacter)
 			{
-				TArray<APawn*> FreeNpcs = PlayerCharacter->CurrentPlayerstate->GetNpcsByState(PlayerCharacter->CurrentPlayerstate->OwnedNpcs, ENpcJob::StorageWorker, ENpcTask::Free);
-				if (FreeNpcs.Num() > 0)
+				APawn* FreeNpc = PlayerCharacter->CurrentPlayerstate->GetStorageWorker();
+				if (FreeNpc != NULL)
 				{
-					ANpcController* const Npc = Cast<ANpcController>(FreeNpcs[0]->GetController());
+					ANpcController* const Npc = Cast<ANpcController>(FreeNpc->GetController());
 					if (Npc)
 					{
 						if (CurrentProductionQuantity > 0)

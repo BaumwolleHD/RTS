@@ -21,8 +21,11 @@ public:
 
 	void NpcHandler();
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = NPCs)
 	float NpcSortFrequency = 1;
 	float NpcSortTimer = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = NPCs)
 	TArray<int32> TaskPriorities;
 	int32 NpcProgression = 0;
 
@@ -54,4 +57,7 @@ public:
 	TArray<APawn*> GetNpcsByState(TArray<APawn*> NpcArray, ENpcJob Job, ENpcTask Task);
 
 	
+
+	APawn* GetStorageWorker();
+
 };

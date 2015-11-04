@@ -37,16 +37,17 @@ void ADefaultPlayerstate::Tick(float DeltaTime)
 
 	ANpcController* NpcController;
 
-	if (NpcSortTimer >= NpcSortFrequency) 
+	if (NpcSortTimer <= 0) 
 	{
 		TaskPriorities.Empty();
-		NpcSortTimer = 0.f;
+		NpcSortTimer = NpcSortFrequency;
+		
 		for (int32 NpcSortIndex = 0; NpcSortIndex < OwnedNpcs.Num(); NpcSortIndex++)
 		{
 			NpcController = Cast<ANpcController>(OwnedNpcs[NpcSortIndex]->GetController());
-			if (NpcController)
+			if (NpcController && NpcController->Job == ENpcJob::StorageWorker)
 			{
-				TaskPriorities[NpcSortIndex] = NpcController->Tasks.Num();
+				TaskPriorities.Add(NpcController->Tasks.Num());
 			}
 		}
 		TaskPriorities.Sort();
@@ -58,7 +59,7 @@ void ADefaultPlayerstate::Tick(float DeltaTime)
 	}
 	else
 	{
-		NpcSortTimer += DeltaTime;
+		NpcSortTimer -= DeltaTime;
 	}
 
 	//int32 End;
@@ -261,6 +262,20 @@ void ADefaultPlayerstate::Tick(float DeltaTime)
 			}
 		}
 	}
+
+}
+
+
+APawn* ADefaultPlayerstate::GetStorageWorker()
+{
+	if (TaskPriorities.Num() > 0)
+	{
+
+		return OwnedNpcs[TaskPriorities[0]];
+
+	}
+
+	return NULL;
 
 }
 
