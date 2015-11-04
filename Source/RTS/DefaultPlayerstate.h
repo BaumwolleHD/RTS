@@ -20,8 +20,10 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	void NpcHandler();
-
-
+	
+	float NpcSortFrequency = 1;
+	float NpcSortTimer = 0;
+	TArray<int32> TaskPriorities;
 	int32 NpcProgression = 0;
 
 		//Id
