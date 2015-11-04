@@ -23,8 +23,11 @@ void ADefaultPlayerstate::BeginPlay()
 {
 	Super::BeginPlay();
 
+}
 
-
+inline static bool SortNpcPredicate(const int32& TaskCount1, int32& TaskCount2)
+{
+	return (TaskCount1 > TaskCount2);
 }
 
 void ADefaultPlayerstate::Tick(float DeltaTime)
@@ -34,7 +37,30 @@ void ADefaultPlayerstate::Tick(float DeltaTime)
 
 	ANpcController* NpcController;
 
-	
+	if (NpcSortTimer >= NpcSortFrequency) 
+	{
+		TaskPriorities.Empty();
+		NpcSortTimer = 0.f;
+		for (int32 NpcSortIndex = 0; NpcSortIndex < OwnedNpcs.Num(); NpcSortIndex++)
+		{
+			NpcController = Cast<ANpcController>(OwnedNpcs[NpcSortIndex]->GetController());
+			if (NpcController)
+			{
+				TaskPriorities[NpcSortIndex] = NpcController->Tasks.Num();
+			}
+		}
+		TaskPriorities.Sort();
+		for (int32 TaskPriority = 0; TaskPriority<TaskPriorities.Num(); TaskPriority++)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("TaskPriority: %d"), TaskPriorities[TaskPriority]);
+		}
+			
+	}
+	else
+	{
+		NpcSortTimer += DeltaTime;
+	}
+
 	//int32 End;
 
 	int32 StartNpc = 0;
@@ -70,6 +96,7 @@ void ADefaultPlayerstate::Tick(float DeltaTime)
 
 	for (int32 NpcIndex = StartNpc; NpcIndex < EndNpc; NpcIndex++)
 	{
+
 		NpcController = Cast<ANpcController>(OwnedNpcs[NpcIndex]->GetController());
 
 		if (NpcController && FVector::Dist(NpcController->TargetLocation, NpcController->GetPawn()->GetActorLocation()) < 250.f || NpcController->Tasks[0] == ENpcTask::Free && NpcController->Tasks.Num() > 1)
