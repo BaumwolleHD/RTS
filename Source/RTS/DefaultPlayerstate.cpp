@@ -47,12 +47,14 @@ void ADefaultPlayerstate::Tick(float DeltaTime)
 			NpcController = Cast<ANpcController>(OwnedNpcs[NpcSortIndex]->GetController());
 			if (NpcController && NpcController->Job == ENpcJob::StorageWorker)
 			{
-				TaskPriorities.Add(NpcController->Tasks.Num());
+				TaskPriorities.Add(NpcSortIndex+NpcController->Tasks.Num()*1000);
 			}
 		}
 		TaskPriorities.Sort();
+
 		for (int32 TaskPriority = 0; TaskPriority<TaskPriorities.Num(); TaskPriority++)
 		{
+			TaskPriorities[TaskPriority] -= FMath::Floor(TaskPriorities[TaskPriority]/1000)*1000;
 			UE_LOG(LogTemp, Warning, TEXT("TaskPriority: %d"), TaskPriorities[TaskPriority]);
 		}
 			
@@ -93,7 +95,7 @@ void ADefaultPlayerstate::Tick(float DeltaTime)
 	EndNpc = FMath::Min(StartNpc + NpcsToIterate, OwnedNpcs.Num());
 	NpcProgression += NpcsToIterate + 1;
 
-	UE_LOG(LogTemp, Warning, TEXT("%d Npc: %d - %d, %d"), NpcsToIterate, StartNpc, EndNpc, int(1 / DeltaTime));
+	//UE_LOG(LogTemp, Warning, TEXT("%d Npc: %d - %d, %d"), NpcsToIterate, StartNpc, EndNpc, int(1 / DeltaTime));
 
 	for (int32 NpcIndex = StartNpc; NpcIndex < EndNpc; NpcIndex++)
 	{
@@ -270,7 +272,7 @@ APawn* ADefaultPlayerstate::GetStorageWorker()
 {
 	if (TaskPriorities.Num() > 0)
 	{
-
+		NpcSortTimer = 0;
 		return OwnedNpcs[TaskPriorities[0]];
 
 	}

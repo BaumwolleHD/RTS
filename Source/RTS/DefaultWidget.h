@@ -6,6 +6,15 @@
 #include "DefaultWidget.generated.h"
 
 
+UENUM(BlueprintType)
+enum class ECurrentContextWidget : uint8
+{
+	Empty 	UMETA(DisplayName = "Empty"),
+	BuildingOutliner 	UMETA(DisplayName = "BuildingOutliner"),
+	BuildMode 	UMETA(DisplayName = "BuildMode"),
+};
+
+
 UCLASS()
 class RTS_API UDefaultWidget : public UUserWidget
 {

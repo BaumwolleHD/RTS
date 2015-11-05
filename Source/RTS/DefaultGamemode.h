@@ -28,13 +28,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Npcs)
 		bool bSpawnBeggers;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Npcs)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Npcs)
 		int32 SpawnRate;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Npcs)
 		int32 Spawncount;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Npcs)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Npcs)
 		float SpawnTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Npcs)

@@ -35,10 +35,11 @@ void ADefaultGamemode::NpcInfluxHandler(float DeltaTime)
 
 		if (SpawnTimer <= 0)
 		{
-			Spawncount++;
+			
 			UWorld* World = GetWorld();
 			if (World)
 			{
+				Spawncount++;
 				SpawnTimer = SpawnRate * FMath::FRandRange(0.75f, 1.25f);
 				for (int32 UserIndex = 0; UserIndex < CurrentGamestate->PlayerCharacterList.Num(); UserIndex++)
 				{
