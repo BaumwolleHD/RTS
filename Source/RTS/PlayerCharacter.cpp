@@ -23,7 +23,7 @@ APlayerCharacter::APlayerCharacter()
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	Mode = "Build";
+	Mode = EPlayerMode::Build;
 	CameraMovementMargin = 0.1f;
 	CameraMaxSpeed = 100.f;
 	CameraMinSpeed = 50.f;
@@ -60,7 +60,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		UGameplayStatics::GetPlayerController(this, 0)->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, MouseHitResult);
 		MouseMovement(DeltaTime);
-		if (Mode == "Build" || Mode == "BuildExtension")
+		if (Mode == EPlayerMode::Build || Mode == EPlayerMode::BuildExtension)
 		{
 			BuildingPreview();
 		}
@@ -81,7 +81,7 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* InputCom
 }
 void APlayerCharacter::OnLeftClick()
 {
-	if (Mode == "Build" || Mode == "BuildExtension" && Role < ROLE_Authority)
+	if (Mode == EPlayerMode::Build || Mode == EPlayerMode::BuildExtension)
 	{
 
 		PlaceBuilding(MouseHitResult, SelectedBuilding);
@@ -118,7 +118,7 @@ void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, TSubcl
 
 			ABuilding* const TestBuilding = Building.GetDefaultObject();
 			FVector2D Grid2DPosition = ApplyGrid(FVector2D(HitResult.ImpactPoint.X, HitResult.ImpactPoint.Y), TestBuilding->Size);
-			if (CanPlaceBuilding(Grid2DPosition, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(Grid2DPosition, SelectedActor)))
+			if (CanPlaceBuilding(Grid2DPosition, TestBuilding->Size) && (Mode == EPlayerMode::Build || CanPlaceBuildingExtension(Grid2DPosition, SelectedActor)))
 			{
 				FActorSpawnParameters SpawnParameters;
 				SpawnParameters.Owner = this;
@@ -130,7 +130,7 @@ void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, TSubcl
 				UpdateBlocks(Grid2DPosition, TestBuilding->Size, FString::FromInt(TestBuilding->ID));
 
 
-				if (this->Mode == "BuildExtension")
+				if (Mode == EPlayerMode::BuildExtension)
 				{
 					ABuilding* const Building = Cast<ABuilding>(SelectedActor);
 					ABuildingExtension* const BuildingExtension = Cast<ABuildingExtension>(SpawnedBuilding);
@@ -313,7 +313,7 @@ void APlayerCharacter::BuildingPreview()
 					//UE_LOG(LogTemp, Warning, TEXT("Self: %s, Building: %s"), *GetName(), *CurrentPlayerstate->SelectedBuilding->GetName());
 				}
 
-				if (CanPlaceBuilding(GridLocation, TestBuilding->Size) && (Mode == "Build" || CanPlaceBuildingExtension(GridLocation, SelectedActor)))
+				if (CanPlaceBuilding(GridLocation, TestBuilding->Size) && (Mode == EPlayerMode::Build || CanPlaceBuildingExtension(GridLocation, SelectedActor)))
 				{
 					CurrentPreviewBuilding->Material->SetVectorParameterValue(FName("PreviewColor"), FLinearColor(0, 0.8f, 0));
 				}
@@ -515,7 +515,7 @@ void APlayerCharacter::SetModeToBuildExtend()
 	if (Building && Role < ROLE_Authority)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SetModeToBuildExtend success"));
-		Mode = "BuildExtension";
+		Mode = EPlayerMode::BuildExtension;
 		SelectedBuilding = Building->ExtensionBuildingClass;
 	}
 }

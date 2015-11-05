@@ -41,6 +41,11 @@ public:
 		uint32 BuildProgressionState;
 
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Interface)
+		FName Name;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Interface)
+		UTexture2D* Icon;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Building)
 		TArray<UStaticMesh*> BuildMeshes;

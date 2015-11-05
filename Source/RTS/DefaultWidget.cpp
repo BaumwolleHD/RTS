@@ -11,4 +11,9 @@ void UDefaultWidget::UpdateItems(TArray<int32> Items)
 
 }
 
+AActor* UDefaultWidget::BPGetDefaultObject(TSubclassOf<AActor> Class)
+{
 
+	return Class.GetDefaultObject();
+
+}

@@ -24,6 +24,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Items)
 		void UpdateItems(TArray<int32> Items);
 
+	UFUNCTION(BlueprintCallable, Category = Items)
+		AActor* BPGetDefaultObject(TSubclassOf<AActor> Class);
+
 	UFUNCTION(BlueprintImplementableEvent, Category = Items, meta = (Displayname = "OnUpdateItems"))
 		void OnUpdateItems(const TArray<int32>& Items);
 

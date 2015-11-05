@@ -8,6 +8,16 @@
 #include "DefaultPlayerstate.h"
 #include "PlayerCharacter.generated.h"
 
+
+UENUM(BlueprintType)
+enum class EPlayerMode : uint8
+{
+	Select 	UMETA(DisplayName = "Select"),
+	Build 	UMETA(DisplayName = "Build"),
+	BuildExtension 	UMETA(DisplayName = "BuildExtension"),
+};
+
+
 UCLASS()
 class RTS_API APlayerCharacter : public APawn
 {
@@ -70,7 +80,7 @@ public:
 
 	//Player specific
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
-		FString Mode;
+		EPlayerMode Mode;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInput)
 		AActor* SelectedActor;
