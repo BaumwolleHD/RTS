@@ -96,16 +96,18 @@ void ABuilding::SendBuildStateUpdateToClients_Implementation(float Prog)
 		BuildProgression = Prog;
 		BuildProgressionState = CalculateState(BuildProgression, 5);
 	}
+	if (BuildProgressionState == 1)
+	{
+		float Scaling = Size.X*0.1;
+		SetActorScale3D(FVector(Scaling, Scaling, Scaling));
+		SetActorRotation(FRotator(0.f, Rotation, 0.f));
+
+	}
 	if (BuildProgressionState > 0 && BuildProgressionState <= 5) 
 	{ 
 		BaseMesh->SetStaticMesh(BuildMeshes[BuildProgressionState - 1]); 
 		if (BuildProgressionState == 5){ BuildingComplete(); }
-		else if (BuildProgressionState == 1)
-		{
-			float Scaling = Size.X*0.1;
-			SetActorScale3D(FVector(Scaling, Scaling, Scaling));
 		
-		}
 	}
 }
 

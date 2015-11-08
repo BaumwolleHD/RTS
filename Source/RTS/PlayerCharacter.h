@@ -172,6 +172,8 @@ protected:
 	float ScaleToViewportFloat(float in, float factor);
 	void Pause();
 	void OnLeftClick();
+	void OnMouseWheelUp();
+	void OnMouseWheelDown();
 	FVector2D ApplyGrid(FVector2D Location, FVector2D Size);
 	void SelectActor();
 

@@ -37,6 +37,6 @@ FVector AStorageBlock::GetItemPosition(int32 Index)
 	FVector Location = GetActorLocation();
 	Location.X += (Index % SizeX + 1) * 200 - 400;
 	Location.Y += (Index / SizeY + 1) * 200 - 400;
-	Location.Z += 5;
+	Location.Z += SizeZ;
 	return Location;
 }

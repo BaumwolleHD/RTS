@@ -31,6 +31,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = BaseSetup)
 		UStaticMeshComponent* BaseMesh;
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Building)
 		float BuildProgression;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Building)
@@ -55,6 +56,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BaseSetup)
 		FVector2D Size;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Transforms)
+		int32 Rotation;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Extension)
 		TSubclassOf<class ABuilding> ExtensionBuildingClass;

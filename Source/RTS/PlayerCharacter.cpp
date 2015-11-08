@@ -77,6 +77,9 @@ void APlayerCharacter::SetupPlayerInputComponent(class UInputComponent* InputCom
 	Super::SetupPlayerInputComponent(InputComponent);
 	InputComponent->BindAction("LeftClick", IE_Released, this, &APlayerCharacter::OnLeftClick);
 	InputComponent->BindAction("Pause", IE_Pressed, this, &APlayerCharacter::Pause);
+	InputComponent->BindAction("MouseScrollUp", IE_Pressed, this, &APlayerCharacter::OnMouseWheelUp);
+	InputComponent->BindAction("MouseScrollDown", IE_Pressed, this, &APlayerCharacter::OnMouseWheelDown);
+
 
 }
 void APlayerCharacter::OnLeftClick()
@@ -90,6 +93,35 @@ void APlayerCharacter::OnLeftClick()
 	{
 		SelectActor();
 	}
+}
+
+void APlayerCharacter::OnMouseWheelUp()
+{
+	if (Mode == EPlayerMode::Build || Mode == EPlayerMode::BuildExtension)
+	{
+
+		ABuildingPreview* const CurrentPreviewBuilding = Cast<ABuildingPreview>(CurrentGamestate->CurrentPreview);
+		if (CurrentPreviewBuilding)
+		{
+			CurrentPreviewBuilding->Rotation -= 90;
+			CurrentPreviewBuilding->SetActorRotation(FRotator(0.f, CurrentPreviewBuilding->Rotation, 0.f));
+		}
+	}
+
+}
+void APlayerCharacter::OnMouseWheelDown()
+{
+	if (Mode == EPlayerMode::Build || Mode == EPlayerMode::BuildExtension)
+	{
+
+		ABuildingPreview* const CurrentPreviewBuilding = Cast<ABuildingPreview>(CurrentGamestate->CurrentPreview);
+		if (CurrentPreviewBuilding)
+		{
+			CurrentPreviewBuilding->Rotation += 90;
+			CurrentPreviewBuilding->SetActorRotation(FRotator(0.f, CurrentPreviewBuilding->Rotation, 0.f));
+		}
+	}
+
 }
 
 void APlayerCharacter::SelectActor()
@@ -115,10 +147,26 @@ void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, TSubcl
 		//APlayerCharacter* PossesedPlayerCharacter = Cast<APlayerCharacter>(Cast<ADefaultGamemode>(UGameplayStatics::GetGameMode(this))->PlayerList[UserIndex]);
 		if (World)
 		{
-
+			FVector2D Size;
 			ABuilding* const TestBuilding = Building.GetDefaultObject();
-			FVector2D Grid2DPosition = ApplyGrid(FVector2D(HitResult.ImpactPoint.X, HitResult.ImpactPoint.Y), TestBuilding->Size);
-			if (CanPlaceBuilding(Grid2DPosition, TestBuilding->Size) && (Mode == EPlayerMode::Build || CanPlaceBuildingExtension(Grid2DPosition, SelectedActor)))
+			ABuildingPreview* const CurrentPreviewBuilding = Cast<ABuildingPreview>(CurrentGamestate->CurrentPreview);
+			if (CurrentPreviewBuilding)
+			{
+				
+				if (FMath::Fmod(CurrentPreviewBuilding->Rotation, 180) == 0)
+				{
+					Size = TestBuilding->Size;
+
+				}
+				else
+				{
+					Size = FVector2D(TestBuilding->Size.Y, TestBuilding->Size.X);
+				}
+			}
+
+			FVector2D Grid2DPosition = ApplyGrid(FVector2D(HitResult.ImpactPoint.X, HitResult.ImpactPoint.Y), Size);
+
+			if (CanPlaceBuilding(Grid2DPosition, Size) && (Mode == EPlayerMode::Build || CanPlaceBuildingExtension(Grid2DPosition, SelectedActor)))
 			{
 				FActorSpawnParameters SpawnParameters;
 				SpawnParameters.Owner = this;
@@ -126,9 +174,10 @@ void APlayerCharacter::PlaceBuilding_Implementation(FHitResult HitResult, TSubcl
 				ABuilding* const SpawnedBuilding = World->SpawnActor<ABuilding>(Building, FVector(Grid2DPosition.X * 100, Grid2DPosition.Y * 100, 20.f), FRotator(0.f, 0.f, 0.f), SpawnParameters);
 
 				CurrentPlayerstate->OwnedBuildings.Add(SpawnedBuilding);
+				
 
-				UpdateBlocks(Grid2DPosition, TestBuilding->Size, FString::FromInt(TestBuilding->ID));
-
+				UpdateBlocks(Grid2DPosition, Size, FString::FromInt(TestBuilding->ID));
+				SpawnedBuilding->Rotation = CurrentPreviewBuilding->Rotation;
 
 				if (Mode == EPlayerMode::BuildExtension)
 				{
@@ -289,9 +338,24 @@ void APlayerCharacter::BuildingPreview()
 {
 	if (MouseHitResult.bBlockingHit && CurrentPlayerstate)
 	{
+		FVector2D Size;
 		ABuilding* const TestBuilding = SelectedBuilding.GetDefaultObject();
+		ABuildingPreview* const CurrentPreviewBuilding = Cast<ABuildingPreview>(CurrentGamestate->CurrentPreview);
+		if (CurrentPreviewBuilding)
+		{
+
+			if (FMath::Fmod(CurrentPreviewBuilding->Rotation, 180) == 0)
+			{
+				Size = TestBuilding->Size;
+
+			}
+			else
+			{
+				Size = FVector2D(TestBuilding->Size.Y, TestBuilding->Size.X);
+			}
+		}
 		
-		FVector2D GridLocation = ApplyGrid(FVector2D(MouseHitResult.ImpactPoint.X, MouseHitResult.ImpactPoint.Y), TestBuilding->Size);
+		FVector2D GridLocation = ApplyGrid(FVector2D(MouseHitResult.ImpactPoint.X, MouseHitResult.ImpactPoint.Y), Size);
 		const FString PassedString = FString::FromInt(GridLocation.X) + "|" + FString::FromInt(GridLocation.Y);
 		//ADefaultGamestate* const Gamestate = Cast<ADefaultGamestate>(UGameplayStatics::GetGameState(this));
 		if (CurrentGamestate && CurrentGamestate->CurrentPreview != nullptr && IsRelevant)
@@ -313,7 +377,7 @@ void APlayerCharacter::BuildingPreview()
 					//UE_LOG(LogTemp, Warning, TEXT("Self: %s, Building: %s"), *GetName(), *CurrentPlayerstate->SelectedBuilding->GetName());
 				}
 
-				if (CanPlaceBuilding(GridLocation, TestBuilding->Size) && (Mode == EPlayerMode::Build || CanPlaceBuildingExtension(GridLocation, SelectedActor)))
+				if (CanPlaceBuilding(GridLocation, Size) && (Mode == EPlayerMode::Build || CanPlaceBuildingExtension(GridLocation, SelectedActor)))
 				{
 					CurrentPreviewBuilding->Material->SetVectorParameterValue(FName("PreviewColor"), FLinearColor(0, 0.8f, 0));
 				}

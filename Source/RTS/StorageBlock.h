@@ -22,12 +22,16 @@ public:
 		int32 SizeX;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Size)
 		int32 SizeY;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Size)
+		int32 SizeZ;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ItemClasses)
 		TArray<AActor*> StorageStacks;
 
 	UPROPERTY()
 		TMap<FString, int32> StorageIndexes;
+
+	
 
 	//UFUNCTION(BlueprintCallable, Category = Items)
 	//	bool AddStorageStack(int32 Type, int32 Quantity);

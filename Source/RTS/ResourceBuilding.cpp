@@ -45,7 +45,7 @@ void AResourceBuilding::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	if (Role == ROLE_Authority && BuildProgressionState == 5) 
+	if (Role == ROLE_Authority && BuildProgressionState == 5)
 	{
 		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 
@@ -54,7 +54,7 @@ void AResourceBuilding::Tick(float DeltaTime)
 			GrowProgression = FMath::Min(GrowProgression + (1 / GrowTime) * DeltaTime, 1.f);
 
 			int32 CurrentGrowProgressionState = CalculateState(GrowProgression, GrowMeshes.Num());
-			if (GrowProgressionState != CurrentGrowProgressionState) 
+			if (GrowProgressionState != CurrentGrowProgressionState)
 			{
 				SendGrowStateUpdateToClients(GrowProgression);
 				GrowProgressionState = CurrentGrowProgressionState;
@@ -65,65 +65,75 @@ void AResourceBuilding::Tick(float DeltaTime)
 				IsGrowing = false;
 			}
 
-		
+
 			if (ConsumptionQuantity > 0)
 			{
-				int32 CurrentConsumeProgressionState = CalculateState(1 - GrowProgression, ConsumeMeshes.Num() + 1) - 1;
+				int32 CurrentConsumeProgressionState = CalculateState(1 - GrowProgression, ConsumeMeshes.Num()) - 1;
 				if (ConsumeProgressionState != CurrentConsumeProgressionState)
 				{
 					SendConsumeStateUpdateToClients(1 - GrowProgression);
+
 				}
+				if (CurrentGrowProgressionState == GrowMeshes.Num())
+				{
+					CurrentConsumptionQuantity = 0;
+				}
+
 			}
 
 		}
-		else if (GrowProgressionState == 0 && CurrentProductionQuantity == 0 && (ConsumptionQuantity == 0 || CurrentConsumptionQuantity == ConsumptionQuantity ))
+		else if (GrowProgressionState == 0 && CurrentProductionQuantity == 0 && (ConsumptionQuantity == 0 || CurrentConsumptionQuantity == ConsumptionQuantity))
 		{
 			IsGrowing = true;
 			SendGrowStateUpdateToClients(0.f);
 		}
-		else if (!CalledNpc && (GrowProgressionState == GrowMeshes.Num() || GrowProgressionState == 0 && CurrentConsumptionQuantity < ConsumptionQuantity && PlayerCharacter->CheckForQuantity(ConsumptionID) >= ConsumptionQuantity - CurrentConsumptionQuantity || CurrentProductionQuantity > 0))
+		else if (!CalledNpc)
 		{
-			if (PlayerCharacter)
+			if (GrowProgressionState == GrowMeshes.Num() || GrowProgressionState == 0 && CurrentConsumptionQuantity < ConsumptionQuantity && PlayerCharacter->CheckForQuantity(ConsumptionID) >= ConsumptionQuantity - CurrentConsumptionQuantity || CurrentProductionQuantity > 0)
 			{
-				APawn* FreeNpc = PlayerCharacter->CurrentPlayerstate->GetStorageWorker();
-				if (FreeNpc != NULL)
+
+				if (PlayerCharacter)
 				{
-					ANpcController* const Npc = Cast<ANpcController>(FreeNpc->GetController());
-					if (Npc)
+					APawn* FreeNpc = PlayerCharacter->CurrentPlayerstate->GetStorageWorker();
+					if (FreeNpc != NULL)
 					{
-						if (CurrentProductionQuantity > 0)
+						ANpcController* const Npc = Cast<ANpcController>(FreeNpc->GetController());
+						if (Npc)
 						{
-							if (ConsumptionQuantity > 0 && CurrentConsumptionQuantity < ConsumptionQuantity)
+							if (CurrentProductionQuantity > 0)
+							{
+								if (ConsumptionQuantity > 0 && CurrentConsumptionQuantity < ConsumptionQuantity)
+								{
+									Npc->AddTask(ENpcTask::GetBuildingConsumption, this);
+									Npc->AddTask(ENpcTask::PickupItemsFromStorage, PlayerCharacter->CurrentPlayerstate->OwnedStorageBuilding);
+									Npc->AddTask(ENpcTask::DropItemsToBuilding, this);
+								}
+								Npc->AddTask(ENpcTask::PickupItemsFromBuilding, this);
+								Npc->AddTask(ENpcTask::DropItemsToStorage, PlayerCharacter->CurrentPlayerstate->OwnedStorageBuilding);
+							}
+							else
 							{
 								Npc->AddTask(ENpcTask::GetBuildingConsumption, this);
 								Npc->AddTask(ENpcTask::PickupItemsFromStorage, PlayerCharacter->CurrentPlayerstate->OwnedStorageBuilding);
 								Npc->AddTask(ENpcTask::DropItemsToBuilding, this);
-							}
-							Npc->AddTask(ENpcTask::PickupItemsFromBuilding, this);
-							Npc->AddTask(ENpcTask::DropItemsToStorage, PlayerCharacter->CurrentPlayerstate->OwnedStorageBuilding);
-						}
-						else
-						{
-							Npc->AddTask(ENpcTask::GetBuildingConsumption, this);
-							Npc->AddTask(ENpcTask::PickupItemsFromStorage, PlayerCharacter->CurrentPlayerstate->OwnedStorageBuilding);
-							Npc->AddTask(ENpcTask::DropItemsToBuilding, this);
+								UE_LOG(LogTemp, Warning, TEXT("npc called"));
 
-							
+							}
+							IsGrowing = false;
+							CalledNpc = true;
+
 						}
-						IsGrowing = false;
-						CalledNpc = true;
-						UE_LOG(LogTemp, Warning, TEXT("npc called"));
 					}
 				}
-			}
+			}	
 		}
 	}
 }
 
 void AResourceBuilding::SendConsumeStateUpdateToClients_Implementation(float Prog)
 {
-	ConsumeProgressionState = CalculateState(Prog, ConsumeMeshes.Num() + 1) - 1;
-	CurrentConsumptionQuantity = FMath::Min(CalculateState(Prog, ConsumptionQuantity + 1), ConsumptionQuantity);
+	ConsumeProgressionState = CalculateState(Prog, ConsumeMeshes.Num()) - 1;
+	CurrentConsumptionQuantity = FMath::Min(CalculateState(Prog, ConsumptionQuantity+1), ConsumptionQuantity);
 	if (ConsumeProgressionState >= 0 && ConsumeProgressionState < ConsumeMeshes.Num() && BuildProgressionState == 5)
 	{
 		ConsumeMesh->SetStaticMesh(ConsumeMeshes[ConsumeProgressionState]);
@@ -132,10 +142,21 @@ void AResourceBuilding::SendConsumeStateUpdateToClients_Implementation(float Pro
 }
 void AResourceBuilding::SendGrowStateUpdateToClients_Implementation(float Prog)
 {
+	UE_LOG(LogTemp, Warning, TEXT("lol %d %f"), GrowProgressionState, Prog);
+	if (GrowProgressionState == GrowMeshes.Num() - 1)
+	{
+		GrowingComplete();
+	}
+	else if ((GrowProgressionState == 0 && Role == ROLE_Authority || GrowProgressionState == 1) && Prog > 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Hey"));
+		GrowingStarted();
+	}
 	if (Role != ROLE_Authority) {
 		GrowProgression = Prog;
 		GrowProgressionState = CalculateState(GrowProgression, GrowMeshes.Num());
 	}
+
 	if (GrowProgressionState >= 0 && GrowProgressionState < GrowMeshes.Num() && BuildProgressionState == 5)
 	{ 
 		GrowMesh->SetStaticMesh(GrowMeshes[GrowProgressionState]);

@@ -75,6 +75,15 @@ public:
 		void SendConsumeStateUpdateToClients(float Prog);
 	void SendConsumeStateUpdateToClients_Implementation(float Prog);
 
+
+
+
+	UFUNCTION(BlueprintImplementableEvent, Category = Building)
+		void GrowingStarted();
+	UFUNCTION(BlueprintImplementableEvent, Category = Building)
+		void GrowingComplete();
+
+
 private:
 
 	virtual void Tick(float DeltaSeconds);

@@ -26,4 +26,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Visuals)
 		UMaterialInstanceDynamic* Material;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Transform)
+		int32 Rotation;
+
 };
