@@ -48,10 +48,10 @@ void ABuilding::Tick(float DeltaTime)
 
 	if (Role == ROLE_Authority) {
 
-		if (BuildProgressionState != 5)
+		if (BuildProgressionState != BuildMeshes.Num())
 		{
 			BuildProgression = FMath::Min( BuildProgression+(1 / BuildTime) * DeltaTime, 1.f);
-			int32 CurrentBuildProgressionState = CalculateState(BuildProgression, 5);
+			int32 CurrentBuildProgressionState = CalculateState(BuildProgression, BuildMeshes.Num());
 			if (BuildProgressionState != CurrentBuildProgressionState) {
 				BuildProgressionState = CurrentBuildProgressionState;
 				SendBuildStateUpdateToClients(BuildProgression);
@@ -94,7 +94,7 @@ void ABuilding::SendBuildStateUpdateToClients_Implementation(float Prog)
 {
 	if (Role != ROLE_Authority) {
 		BuildProgression = Prog;
-		BuildProgressionState = CalculateState(BuildProgression, 5);
+		BuildProgressionState = CalculateState(BuildProgression, BuildMeshes.Num());
 	}
 	if (BuildProgressionState == 1)
 	{
@@ -103,10 +103,10 @@ void ABuilding::SendBuildStateUpdateToClients_Implementation(float Prog)
 		SetActorRotation(FRotator(0.f, Rotation, 0.f));
 
 	}
-	if (BuildProgressionState > 0 && BuildProgressionState <= 5) 
+	if (BuildProgressionState > 0 && BuildProgressionState <= BuildMeshes.Num()) 
 	{ 
 		BaseMesh->SetStaticMesh(BuildMeshes[BuildProgressionState - 1]); 
-		if (BuildProgressionState == 5){ BuildingComplete(); }
+		if (BuildProgressionState == BuildMeshes.Num()){ BuildingComplete(); }
 		
 	}
 }

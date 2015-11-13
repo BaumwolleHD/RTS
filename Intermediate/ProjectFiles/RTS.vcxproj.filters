@@ -4,7 +4,7 @@
 	<ItemGroup>
 		<None Include="..\..\RTS.uproject" />
 		<Filter Include="Source">
-			<UniqueIdentifier>{F37B5E43-9326-4E4C-AEF5-2CA6D2C4819A}</UniqueIdentifier>
+			<UniqueIdentifier>{2BBB9246-8166-4645-93AB-82756949137B}</UniqueIdentifier>
 		</Filter>
 		<None Include="..\..\Source\RTS.Target.cs">
 			<Filter>Source</Filter>
@@ -13,7 +13,7 @@
 			<Filter>Source</Filter>
 		</None >
 		<Filter Include="Config">
-			<UniqueIdentifier>{8EDB6270-6A88-460C-AAA9-C315F5035A07}</UniqueIdentifier>
+			<UniqueIdentifier>{D07A7797-AAD5-439A-849B-EF7ED7689435}</UniqueIdentifier>
 		</Filter>
 		<None Include="..\..\Config\DefaultEditorPerProjectUserSettings.ini">
 			<Filter>Config</Filter>
@@ -21,11 +21,14 @@
 		<None Include="..\..\Config\DefaultEngine.ini">
 			<Filter>Config</Filter>
 		</None >
+		<None Include="..\..\Config\DefaultGame.ini">
+			<Filter>Config</Filter>
+		</None >
 		<None Include="..\..\Config\DefaultInput.ini">
 			<Filter>Config</Filter>
 		</None >
 		<Filter Include="Source\RTS">
-			<UniqueIdentifier>{8898C79A-D81E-4FAD-9A9F-61FCF138EEB6}</UniqueIdentifier>
+			<UniqueIdentifier>{C2215C7A-4210-4E29-9AE1-E91EE1FB5514}</UniqueIdentifier>
 		</Filter>
 		<ClCompile Include="..\..\Source\RTS\Building.cpp">
 			<Filter>Source\RTS</Filter>

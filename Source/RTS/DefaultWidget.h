@@ -28,6 +28,6 @@ public:
 		AActor* BPGetDefaultObject(TSubclassOf<AActor> Class);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = Items, meta = (Displayname = "OnUpdateItems"))
-		void OnUpdateItems(const TArray<int32>& Items);
+		void OnUpdateItems(const TArray<int32>& Items, const TArray<int32>& Icons);
 
 };

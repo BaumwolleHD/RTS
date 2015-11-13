@@ -44,10 +44,13 @@ void ADefaultPlayerstate::Tick(float DeltaTime)
 		
 		for (int32 NpcSortIndex = 0; NpcSortIndex < OwnedNpcs.Num(); NpcSortIndex++)
 		{
-			NpcController = Cast<ANpcController>(OwnedNpcs[NpcSortIndex]->GetController());
-			if (NpcController && NpcController->Job == ENpcJob::StorageWorker)
+			if (OwnedNpcs[NpcSortIndex]->IsValidLowLevel())
 			{
-				TaskPriorities.Add(NpcSortIndex+NpcController->Tasks.Num()*1000);
+				NpcController = Cast<ANpcController>(OwnedNpcs[NpcSortIndex]->GetController());
+				if (NpcController && NpcController->Job == ENpcJob::StorageWorker)
+				{
+					TaskPriorities.Add(NpcSortIndex + NpcController->Tasks.Num() * 1000);
+				}
 			}
 		}
 		TaskPriorities.Sort();
@@ -167,13 +170,14 @@ void ADefaultPlayerstate::Tick(float DeltaTime)
 						ResourceBuilding->GrowProgressionState = 0;
 						
 						NpcController->CarriedItemQuantity -= ResourceBuilding->CurrentConsumptionQuantity - OldConsumption;
-						if (NpcController->CarriedItemQuantity == 0)
+						if (NpcController->CarriedItemQuantity <= 0)
 						{
-							NpcController->CarriedItemID = 0;
+							NpcController->CarriedItemID = NpcController->CarriedItemQuantity = 0;
 						}
 						else
 						{
 							NpcController->AddTask(ENpcTask::DropItemsToStorage, PlayerCharacter->OwnedStorageBuilding, ENpcTaskPriority::Urgent);
+							UE_LOG(LogTemp, Warning, TEXT("fuck dis shiat"));
 						}
 					}
 					break;

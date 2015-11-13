@@ -45,7 +45,7 @@ void AResourceBuilding::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	if (Role == ROLE_Authority && BuildProgressionState == 5)
+	if (Role == ROLE_Authority && BuildProgressionState == BuildMeshes.Num())
 	{
 		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 
@@ -134,7 +134,7 @@ void AResourceBuilding::SendConsumeStateUpdateToClients_Implementation(float Pro
 {
 	ConsumeProgressionState = CalculateState(Prog, ConsumeMeshes.Num()) - 1;
 	CurrentConsumptionQuantity = FMath::Min(CalculateState(Prog, ConsumptionQuantity+1), ConsumptionQuantity);
-	if (ConsumeProgressionState >= 0 && ConsumeProgressionState < ConsumeMeshes.Num() && BuildProgressionState == 5)
+	if (ConsumeProgressionState >= 0 && ConsumeProgressionState < ConsumeMeshes.Num() && BuildProgressionState == BuildMeshes.Num())
 	{
 		ConsumeMesh->SetStaticMesh(ConsumeMeshes[ConsumeProgressionState]);
 		
@@ -157,7 +157,7 @@ void AResourceBuilding::SendGrowStateUpdateToClients_Implementation(float Prog)
 		GrowProgressionState = CalculateState(GrowProgression, GrowMeshes.Num());
 	}
 
-	if (GrowProgressionState >= 0 && GrowProgressionState < GrowMeshes.Num() && BuildProgressionState == 5)
+	if (GrowProgressionState >= 0 && GrowProgressionState < GrowMeshes.Num() && BuildProgressionState == BuildMeshes.Num())
 	{ 
 		GrowMesh->SetStaticMesh(GrowMeshes[GrowProgressionState]);
 		for (int32 Index = 0; Index < ExtensionBuildings.Num(); Index++)
@@ -169,7 +169,7 @@ void AResourceBuilding::SendGrowStateUpdateToClients_Implementation(float Prog)
 				{
 					Extension->GrowMesh->SetStaticMesh(Extension->GrowMeshes[GrowProgressionState]);
 				}
-				else if (GrowProgressionState == 0 && Extension->BuildProgressionState == 5)
+				else if (GrowProgressionState == 0 && Extension->BuildProgressionState == BuildMeshes.Num())
 				{
 					Extension->IsGrowing = true;
 					Extension->SetMasterBuilding(this);

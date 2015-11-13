@@ -39,7 +39,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Building)
 		int32 ID;
 	UPROPERTY()
-		uint32 BuildProgressionState;
+		int32 BuildProgressionState;
 
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Interface)

@@ -366,11 +366,11 @@ void APlayerCharacter::BuildingPreview()
 				
 				CurrentPreviewBuilding->SetActorLocation(FVector(GridLocation.X * 100, GridLocation.Y * 100, MouseHitResult.ImpactPoint.Z));
 
-				if (CurrentPreviewBuilding->Mesh->StaticMesh != TestBuilding->BuildMeshes[4])
+				if (CurrentPreviewBuilding->Mesh->StaticMesh != TestBuilding->BuildMeshes[TestBuilding->BuildMeshes.Num() - 1])
 				{
 
-					CurrentPreviewBuilding->Mesh->SetStaticMesh(TestBuilding->BuildMeshes[4]);
-					CurrentPreviewBuilding->Mesh->SetMaterial(0, TestBuilding->BuildMeshes[4]->GetMaterial(0));
+					CurrentPreviewBuilding->Mesh->SetStaticMesh(TestBuilding->BuildMeshes[TestBuilding->BuildMeshes.Num() - 1]);
+					CurrentPreviewBuilding->Mesh->SetMaterial(0, TestBuilding->BuildMeshes[TestBuilding->BuildMeshes.Num() - 1]->GetMaterial(0));
 					CurrentPreviewBuilding->Material = CurrentPreviewBuilding->Mesh->CreateAndSetMaterialInstanceDynamic(0);
 					float Scaling = TestBuilding->Size.X*0.1;
 					CurrentPreviewBuilding->Mesh->SetRelativeScale3D(FVector(Scaling, Scaling, Scaling));

@@ -6,8 +6,8 @@
 
 void UDefaultWidget::UpdateItems(TArray<int32> Items)
 {
-
-	OnUpdateItems(Items);
+	Items.Sort();
+	OnUpdateItems(Items, Items);
 
 }
 
